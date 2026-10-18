@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Computer Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+main{max-width:900px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:24px}
+h1{margin:0;font-size:clamp(36px,7vw,64px);font-weight:800;line-height:1.1;text-align:center}
+p{margin:0;text-align:center;font-size:clamp(22px,3.5vw,30px);font-weight:500}
+a.game{display:flex;align-items:center;gap:24px;padding:28px 32px;border-radius:36px;color:#1F2A44;text-decoration:none;font-size:clamp(28px,5vw,44px);font-weight:800;box-shadow:0 8px 0 rgba(31,42,68,.25)}
+a.game span.e{font-size:clamp(56px,10vw,90px);line-height:1}
+a.game:active{transform:translateY(4px);box-shadow:0 4px 0 rgba(31,42,68,.25)}
+a.game:focus-visible{outline:4px solid var(--fg);outline-offset:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>Computer Games</h1>
+<p>Pick a game and press play!</p>
+<a class="game" style="background:#8EC5F0" href="computer-helpers.html"><span class="e">💻</span>Computer Helpers</a>
+<a class="game" style="background:#FFD23F" href="tidy-the-desktop.html"><span class="e">🖱️</span>Tidy the Desktop</a>
+<a class="game" style="background:#7FD6B8" href="input-output-fun.html"><span class="e">⌨️</span>Input and Output Fun</a>
+</main>
+</body>
+</html>
