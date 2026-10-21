@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Save and Find</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1100px;margin:0 auto;padding:20px 20px 40px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(32px,6vw,56px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(20px,3.2vw,30px);font-weight:700}
+#side{margin-left:auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#stars{font-size:40px;letter-spacing:4px}
+#tray{min-height:240px;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:center;padding:20px;background:var(--panel);border:4px dashed var(--line);border-radius:32px;color:#1F2A44}
+#tray.col{flex-direction:column}
+#targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.target{min-height:260px;border-radius:32px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;color:#1F2A44;border:4px solid transparent;transition:transform .15s,border-color .15s}
+.target.over{border-color:#1F2A44;transform:scale(1.03)}
+.target .big{font-size:80px;line-height:1.1}
+.target .name{font-size:34px;font-weight:800}
+.slot{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.item{width:150px;height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;color:#1F2A44;border-radius:32px;box-shadow:0 6px 0 rgba(31,42,68,.25);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none;position:relative;z-index:1;transition:transform .25s}
+.item .e{font-size:80px;line-height:1.1}
+.item .c{font-size:24px;font-weight:800;text-align:center}
+.item.drag{z-index:50;cursor:grabbing;transition:none;box-shadow:0 14px 24px rgba(31,42,68,.35)}
+.item.back{animation:shake .35s}
+.item.placed{width:100px;height:104px;border-radius:20px;pointer-events:none;box-shadow:none;cursor:default}
+.item.placed .e{font-size:44px}
+.item.placed .c{font-size:16px}
+.item.tile{cursor:pointer;touch-action:manipulation}
+.thumbimg{width:120px;height:68px;object-fit:cover;border-radius:12px;border:3px solid #E4DED2;background:#fff}
+.bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%}
+.sw{width:52px;height:52px;border-radius:50%;border:5px solid #fff;box-shadow:0 0 0 3px #1F2A44;cursor:pointer;padding:0}
+.sw.on{box-shadow:0 0 0 7px #FF8A3D}
+#cv{width:100%;max-width:640px;height:auto;aspect-ratio:16/9;background:#fff;border:4px solid #1F2A44;border-radius:20px;touch-action:none;cursor:crosshair}
+.pv{width:100%;max-width:360px;height:auto;border:4px solid #1F2A44;border-radius:16px;background:#fff}
+.bigimg{width:100%;max-width:560px;height:auto;border:4px solid #1F2A44;border-radius:20px;background:#fff}
+.lab{margin:0;font-size:28px;font-weight:800;text-align:center}
+.txt{font:inherit;font-size:44px;font-weight:700;padding:10px 20px;border-radius:20px;border:4px solid #E4DED2;width:min(100%,420px);text-align:center;background:#fff;color:#1F2A44}
+.txt:focus{outline:4px solid #1F2A44}
+.fb{font-size:28px;padding:12px 24px;background:#FFD23F}
+.note{margin:0;width:100%;text-align:center;font-size:20px;font-weight:500}
+@keyframes shake{25%{translate:-10px}75%{translate:10px}}
+#msg{min-height:48px;font-size:clamp(24px,4vw,36px);font-weight:800;text-align:center}
+button{font:inherit;font-size:28px;font-weight:800;padding:12px 30px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:22px;padding:8px 20px;background:var(--ye)}
+button.sw{padding:0;font-size:0}
+#next,#again{align-self:center;font-size:32px;padding:14px 36px}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:4px}
+#done{display:none;text-align:center;flex-direction:column;align-items:center;gap:16px;padding:32px 16px}
+#done .party{font-size:120px;line-height:1.1}
+#done h2{margin:0;font-size:clamp(36px,7vw,64px);font-weight:800}
+#done p{margin:0;font-size:clamp(24px,4vw,34px);font-weight:500}
+@media (prefers-reduced-motion:reduce){.item,.target{transition:none}.item.back{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="130" height="98" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Save and Find</h1><p id="hint"></p></div>
+<div id="side"><button id="hear" class="small" aria-label="Hear the instruction">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><div id="stars" aria-label="Progress"></div></div>
+</header>
+<section id="game"><div id="tray" aria-label="Play area"></div></section>
+<section id="targets" aria-label="Places to drop"></section>
+<div id="msg" role="status" aria-live="polite"></div>
+<button id="next" hidden>Next round</button>
+<section id="done">
+<div class="party">🎉</div>
+<h2>You are a Digital Artist!</h2>
+<p>You can make a picture, save it, and find it again. Show your grown-up!</p>
+<button id="again">Play again</button>
+</section>
+</main>
+<script>
+var ROUNDS=[
+{type:"drag",hint:"Where does each file go? Drag it into the right folder.",targets:[{id:"pictures",name:"Pictures",emoji:"🖼️",color:"#FFD23F"},{id:"music",name:"Music",emoji:"🎵",color:"#8EC5F0"},{id:"docs",name:"Documents",emoji:"📄",color:"#7FD6B8"}],items:[{e:"🌅",c:"Photo",t:"pictures"},{e:"🎨",c:"Drawing",t:"pictures"},{e:"🎶",c:"Song",t:"music"},{e:"🥁",c:"Drum beat",t:"music"},{e:"📝",c:"Story",t:"docs"},{e:"🧮",c:"Sums",t:"docs"}]},
+{type:"draw",hint:"Draw a picture. Hold the mouse button and move. Then click Save."},
+{type:"find",hint:"Find your picture! Click the Pictures folder. Then double-click your picture."}
+];
+var r=0,placed=0,ac=null,voiceOn=true,saved=null;
+var NAMES={pictures:"Pictures",music:"Music",docs:"Documents"};
+var FILES={pictures:[{e:"🌅",c:"Beach"},{e:"🐠",c:"Fish"}],music:[{e:"🎶",c:"Song"},{e:"🥁",c:"Drums"}],docs:[{e:"📝",c:"Story"},{e:"🧮",c:"Sums"}]};
+var $=function(id){return document.getElementById(id)};
+function mk(tag,cls,txt){var d=document.createElement(tag);if(cls)d.className=cls;if(txt!==undefined)d.textContent=txt;return d}
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function stars(){var s="";for(var i=0;i<ROUNDS.length;i++){s+=i<r?"⭐":"☆"}$("stars").textContent=s}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function roundDone(m){say(m||"Great job!");if(r<ROUNDS.length-1){$("next").hidden=false}else{setTimeout(finish,1600)}}
+function render(){
+var R=ROUNDS[r];placed=0;stars();say("");
+$("hint").textContent=R.hint;$("next").hidden=true;
+$("game").style.display="";$("done").style.display="none";
+var tr=$("tray");tr.innerHTML="";tr.className=R.type==="drag"?"":"col";
+var tg=$("targets");tg.innerHTML="";tg.style.display=R.type==="drag"?"":"none";
+if(R.type==="drag"){
+shuffle(R.items).forEach(function(it){
+var d=mk("div","item");
+d.innerHTML='<span class="e">'+it.e+'</span><span class="c">'+it.c+'</span>';
+d.setAttribute("role","img");d.setAttribute("aria-label",it.c);d.dataset.t=it.t;d.dataset.c=it.c;
+drag(d);tr.appendChild(d)});
+R.targets.forEach(function(t){
+var d=mk("div","target");d.dataset.id=t.id;d.style.background=t.color;
+d.innerHTML='<div class="big">'+t.emoji+'</div><div class="name">'+t.name+'</div><div class="slot"></div>';
+tg.appendChild(d)})}
+else if(R.type==="draw"){buildDraw(tr)}
+else if(R.type==="find"){buildFind(tr)}
+setTimeout(function(){speak(R.hint)},300)}
+function buildDraw(tr){
+var cols=["#E63946","#FF8A3D","#FFD23F","#2BB5A0","#3A86FF","#1F2A44"],cur=cols[0],size=10,drawn=false,down=false,sws=[];
+var bar=mk("div","bar");
+cols.forEach(function(c){var b=mk("button","sw"+(c===cur?" on":""));b.style.background=c;b.setAttribute("aria-label","Color");
+b.addEventListener("click",function(){cur=c;size=10;sws.forEach(function(x){x.classList.remove("on")});b.classList.add("on")});sws.push(b);bar.appendChild(b)});
+var cv=mk("canvas");cv.id="cv";cv.width=640;cv.height=360;cv.setAttribute("aria-label","Drawing area");
+var ctx=cv.getContext("2d");ctx.fillStyle="#FFFFFF";ctx.fillRect(0,0,640,360);ctx.lineCap="round";ctx.lineJoin="round";
+var er=mk("button","small","🧽 Eraser");er.addEventListener("click",function(){cur="#FFFFFF";size=30;sws.forEach(function(x){x.classList.remove("on")})});
+var cl=mk("button","small","Clear");cl.addEventListener("click",function(){ctx.fillStyle="#FFFFFF";ctx.fillRect(0,0,640,360);drawn=false});
+bar.appendChild(er);bar.appendChild(cl);
+function pos(e){var b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*cv.width/b.width,y:(e.clientY-b.top)*cv.height/b.height}}
+cv.addEventListener("pointerdown",function(e){e.preventDefault();cv.setPointerCapture(e.pointerId);down=true;var p=pos(e);ctx.strokeStyle=cur;ctx.lineWidth=size;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+0.1,p.y+0.1);ctx.stroke();if(cur!=="#FFFFFF")drawn=true});
+cv.addEventListener("pointermove",function(e){if(!down)return;var p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x,p.y)});
+cv.addEventListener("pointerup",function(){down=false});
+cv.addEventListener("pointercancel",function(){down=false});
+var sv=mk("button","","💾 Save");
+sv.addEventListener("click",function(){if(!drawn){say("Draw something first!");tone(220,0.2);return}showSave(cv.toDataURL("image/png"))});
+var note=mk("p","note","Your picture stays on this page. It is not saved or sent anywhere else.");
+tr.appendChild(bar);tr.appendChild(cv);tr.appendChild(sv);tr.appendChild(note)}
+function showSave(url){
+var tr=$("tray");tr.innerHTML="";say("");
+var h="Name it. Then pick the Pictures folder.";$("hint").textContent=h;speak(h);
+var im=mk("img","pv");im.src=url;im.alt="Your drawing";
+var l1=mk("p","lab","Name your picture:");
+var inp=mk("input","txt");inp.type="text";inp.maxLength=12;inp.autocomplete="off";inp.placeholder="Type a name";inp.setAttribute("aria-label","Picture name");
+var l2=mk("p","lab","Choose a folder:");
+var bar=mk("div","bar");
+["pictures","music","docs"].forEach(function(id){
+var b=mk("button","fb",(id==="pictures"?"🖼️ ":id==="music"?"🎵 ":"📄 ")+NAMES[id]);
+b.addEventListener("click",function(){
+if(id!=="pictures"){say("A drawing belongs in Pictures. Try that folder!");tone(220,0.2);return}
+var nm=inp.value.replace(/[^A-Za-z0-9 ]/g,"").trim()||"My picture";
+saved={name:nm.slice(0,12),img:url};win();speak("Saved!");roundDone("Saved! Your picture is in the Pictures folder.")});
+bar.appendChild(b)});
+tr.appendChild(im);tr.appendChild(l1);tr.appendChild(inp);tr.appendChild(l2);tr.appendChild(bar);
+setTimeout(function(){inp.focus()},300)}
+function dbl(el,fn){var last=0;el.addEventListener("pointerup",function(){var n=Date.now();if(n-last<450){last=0;fn()}else{last=n;say("Press twice, fast!")}})}
+function tile(e,c){var d=mk("div","item tile");d.appendChild(mk("span","e",e));d.appendChild(mk("span","c",c));return d}
+function buildFind(tr){
+function root(){
+tr.innerHTML="";say("");
+["pictures","music","docs"].forEach(function(id){
+var t=tile("📁",NAMES[id]);t.setAttribute("role","button");
+t.addEventListener("click",function(){folder(id)});tr.appendChild(t)})}
+function folder(id){
+tr.innerHTML="";
+var top=mk("div","bar");var bk=mk("button","small","⬅ Back");bk.addEventListener("click",root);
+top.appendChild(bk);top.appendChild(mk("p","lab","📂 "+NAMES[id]));tr.appendChild(top);
+var files=mk("div","bar");
+FILES[id].forEach(function(f){var t=tile(f.e,f.c);dbl(t,function(){say("That is not your picture. Look for the one you drew!");tone(220,0.2)});files.appendChild(t)});
+if(id==="pictures"&&saved){
+var m=mk("div","item tile");var im=mk("img","thumbimg");im.src=saved.img;im.alt="Your drawing";m.appendChild(im);m.appendChild(mk("span","c",saved.name));
+dbl(m,openMine);files.appendChild(m);say("Look for the picture you drew. Double-click it!")}
+else{say("Your picture is not in this folder. Click Back and try another.")}
+tr.appendChild(files)}
+function openMine(){
+tr.innerHTML="";
+var im=mk("img","bigimg");im.src=saved.img;im.alt="Your drawing";
+tr.appendChild(im);tr.appendChild(mk("p","lab",saved.name));
+win();speak("You found it!");roundDone("You found it!")}
+root()}
+function drag(el){
+var sx=0,sy=0,over=null;
+el.addEventListener("pointerdown",function(e){
+e.preventDefault();el.setPointerCapture(e.pointerId);sx=e.clientX;sy=e.clientY;
+el.classList.remove("back");el.classList.add("drag");tone(520,0.06);speak(el.dataset.c)});
+el.addEventListener("pointermove",function(e){
+if(!el.classList.contains("drag"))return;
+el.style.transform="translate("+(e.clientX-sx)+"px,"+(e.clientY-sy)+"px) scale(1.08)";
+var t=at(e);if(over&&over!==t)over.classList.remove("over");over=t;if(t)t.classList.add("over")});
+el.addEventListener("pointerup",function(e){
+if(!el.classList.contains("drag"))return;
+el.classList.remove("drag");
+var t=at(e);if(over)over.classList.remove("over");over=null;
+if(t&&t.dataset.id===el.dataset.t){ok(el,t)}
+else{el.style.transform="";el.classList.add("back");say(t?"Not that folder. Try another!":"Hold, move, and let go on a folder.");tone(220,0.2)}});
+el.addEventListener("pointercancel",function(){el.classList.remove("drag");el.style.transform=""})}
+function at(e){
+var els=document.elementsFromPoint(e.clientX,e.clientY);
+for(var i=0;i<els.length;i++){if(els[i].classList&&els[i].classList.contains("target"))return els[i]}return null}
+function ok(el,t){
+el.style.transform="";el.classList.add("placed");t.querySelector(".slot").appendChild(el);
+win();placed++;
+if(placed===ROUNDS[r].items.length){roundDone()}else{say("Yes! That is the right folder.")}}
+function finish(){r=ROUNDS.length;stars();$("game").style.display="none";$("targets").style.display="none";$("msg").textContent="";$("next").hidden=true;$("hint").textContent="";$("done").style.display="flex";tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);speak("You are a Digital Artist!")}
+$("next").addEventListener("click",function(){r++;render()});
+$("again").addEventListener("click",function(){r=0;saved=null;render()});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak($("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+render();
+</script>
+</body>
+</html>
