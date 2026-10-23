@@ -56,11 +56,16 @@ var keys={},P={x:480,y:440,tx:null,ty:null,freeze:0,face:1};
 var world=0,state="card",cardFn=null,items=[],got=0,doorList=[],doorIdx=0,pops=[],shields=[],score=0,spawnP=0,spawnS=0,msg="",msgT=0,playTime=0,lastTs=0,ac=null,voiceOn=true,tt=0,lane=0,hit=0;
 var PARTS=[{n:"Keyboard",e:"⌨️",s:"Keyboard. We type with it."},{n:"Mouse",e:"🖱️",s:"Mouse. We click with it."},{n:"Monitor",e:"🖥️",s:"Monitor. It shows us pictures."},{n:"CPU",e:"tower",s:"CPU. It is the brain of the computer."}];
 var TOYS=[{n:"Teddy",e:"🧸"},{n:"Ball",e:"⚽"}];
+var FILES=[{n:"Photo",e:"🌅",t:"pictures"},{n:"Drawing",e:"🎨",t:"pictures"},{n:"Song",e:"🎶",t:"music"},{n:"Drum beat",e:"🥁",t:"music"},{n:"Story",e:"📝",t:"docs"},{n:"Sums sheet",e:"🧮",t:"docs"}];
+var FZ=[{id:"pictures",name:"Pictures",e:"🖼️",c:"#FFD23F",x:40,w:280},{id:"music",name:"Music",e:"🎵",c:"#8EC5F0",x:340,w:280},{id:"docs",name:"Documents",e:"📄",c:"#7FD6B8",x:640,w:280}];
+var FN={pictures:"Pictures",music:"Music",docs:"Documents"};
+var files=[],carry=null,placedN={pictures:[],music:[],docs:[]};
 var DOORS=[{n:"Keyboard",e:"⌨️",t:"in"},{n:"Mouse",e:"🖱️",t:"in"},{n:"Microphone",e:"🎤",t:"in"},{n:"Monitor",e:"🖥️",t:"out"},{n:"Speakers",e:"🔊",t:"out"},{n:"Printer",e:"🖨️",t:"out"}];
 var WORLDS=[
 {title:"World 1: Computer Town",intro:"Walk with the arrow keys, or click where you want to go. Find the computer parts: keyboard, mouse, monitor, and CPU. Toys are not computer parts!",hint:"Find the computer parts. Toys are not parts!",done:"You found the keyboard, mouse, monitor, and CPU."},
 {title:"World 2: The IN and OUT Doors",intro:"A picture shows at the top. Input sends things IN to the computer. Output sends things OUT to us. Walk to the left door for IN or the right door for OUT.",hint:"Input goes in. Output comes out. Pick a door.",done:"You know which devices are input and which are output."},
-{title:"World 3: Safe Street",intro:"Pop-ups are falling! If you touch one, you stop and call a grown-up. Dodge them, and collect 5 shields.",hint:"Dodge the pop-ups. Collect 5 shields.",done:"You dodged the pop-ups and stayed safe."}
+{title:"World 3: Safe Street",intro:"Pop-ups are falling! If you touch one, you stop and call a grown-up. Dodge them, and collect 5 shields.",hint:"Dodge the pop-ups. Collect 5 shields.",done:"You dodged the pop-ups and stayed safe."},
+{title:"World 4: Folder Forest",intro:"Files are scattered around the forest! Touch a file to pick it up. Then carry it to the right folder: Pictures, Music, or Documents.",hint:"Carry each file to its folder.",done:"You sorted every file into the right folder."}
 ];
 function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
 function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
@@ -70,7 +75,7 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 function card(t,p,b,fn){state="card";$("ct").textContent=t;$("cp").textContent=p;$("cb").textContent=b;$("card").style.display="flex";cardFn=fn;speak(t+". "+p)}
 $("cb").addEventListener("click",function(){$("card").style.display="none";state="play";var f=cardFn;cardFn=null;if(f)f();tone(520,0.08)});
 function intro(i){world=i;card(WORLDS[i].title,WORLDS[i].intro,"Let's go!",function(){init(i)})}
-function complete(i){win();if(i<2){card("World "+(i+1)+" complete!",WORLDS[i].done,"Next world",function(){intro(i+1)})}else{card("You finished the Quest!","You know the computer parts, input and output, and how to stay safe. Great job, explorer!","Play again",function(){intro(0)})}}
+function complete(i){win();if(i<3){card("World "+(i+1)+" complete!",WORLDS[i].done,"Next world",function(){intro(i+1)})}else{card("You finished the Quest!","You know the computer parts, input and output, how to stay safe, and where files belong. Great job, explorer!","Play again",function(){intro(0)})}}
 function init(i){
 P.x=480;P.y=440;P.tx=null;P.ty=null;P.freeze=0;msg="";msgT=0;score=0;
 $("hint").textContent=WORLDS[i].hint;
@@ -78,21 +83,22 @@ if(i===0){got=0;items=[];var all=shuffle(PARTS.map(function(p){return{part:true,
 all.forEach(function(it){var ok=false,tries=0;while(!ok&&tries<200){tries++;it.x=90+Math.random()*(W-180);it.y=130+Math.random()*(H-230);ok=Math.hypot(it.x-P.x,it.y-P.y)>150;for(var k=0;k<items.length&&ok;k++){if(Math.hypot(it.x-items[k].x,it.y-items[k].y)<130)ok=false}}it.taken=false;items.push(it)});
 setProg()}
 else if(i===1){doorList=shuffle(DOORS);doorIdx=0;setProg()}
-else{pops=[];shields=[];spawnP=0.6;spawnS=1.2;setProg()}}
-function setProg(){var s="";if(world===0)s="Parts "+got+"/4";else if(world===1)s="Items "+doorIdx+"/"+doorList.length;else s="🛡️ "+score+"/5";$("prog").textContent=s}
+else if(i===2){pops=[];shields=[];spawnP=0.6;spawnS=1.2;setProg()}
+else{files=[];carry=null;placedN={pictures:[],music:[],docs:[]};shuffle(FILES).forEach(function(f){var o={n:f.n,e:f.e,t:f.t,done:false},ok=false,tries=0;while(!ok&&tries<200){tries++;o.x=70+Math.random()*(W-140);o.y=290+Math.random()*(H-360);ok=Math.hypot(o.x-P.x,o.y-P.y)>130;for(var k=0;k<files.length&&ok;k++){if(Math.hypot(o.x-files[k].x,o.y-files[k].y)<120)ok=false}}o.hx=o.x;o.hy=o.y;files.push(o)});setProg()}}
+function setProg(){var s="";if(world===0)s="Parts "+got+"/4";else if(world===1)s="Items "+doorIdx+"/"+doorList.length;else if(world===3)s="Files "+score+"/6";else s="🛡️ "+score+"/5";$("prog").textContent=s}
 function breakCard(){card("Time for a break!","Stand up, stretch, and drink some water. Then come back to play.","I am back",function(){playTime=0})}
 function move(dt){
 var dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0),sp=300;
 if(dx||dy){P.tx=null;var l=Math.hypot(dx,dy);P.x+=dx/l*sp*dt;P.y+=dy/l*sp*dt;if(dx)P.face=dx>0?1:-1}
 else if(P.tx!==null){var vx=P.tx-P.x,vy=P.ty-P.y,d=Math.hypot(vx,vy);if(d<8){P.tx=null}else{P.x+=vx/d*sp*dt;P.y+=vy/d*sp*dt;if(Math.abs(vx)>4)P.face=vx>0?1:-1}}
-var top=world===0?100:world===1?150:230;
+var top=world===0?100:world===1?150:world===2?230:240;
 P.x=Math.max(40,Math.min(W-40,P.x));P.y=Math.max(top,Math.min(H-40,P.y))}
 function update(dt){
 if(state!=="play")return;
 tt+=dt;playTime+=dt;if(playTime>=600){breakCard();return}
 if(msgT>0)msgT-=dt;
 if(P.freeze>0){P.freeze-=dt}else{move(dt)}
-if(world===0)upd1();else if(world===1)upd2();else upd3(dt)}
+if(world===0)upd1();else if(world===1)upd2();else if(world===2)upd3(dt);else upd4()}
 function upd1(){
 items.forEach(function(it){if(it.taken)return;if(Math.hypot(it.x-P.x,it.y-P.y)<56){it.taken=true;
 if(it.part){got++;win();say(it.s,3.2);speak(it.s);setProg();if(got===4){setTimeout(function(){complete(0)},1400)}}
@@ -113,6 +119,18 @@ pops=pops.filter(function(p){return p.y<H+80});shields=shields.filter(function(s
 if(P.freeze<=0){
 for(var i=0;i<pops.length;i++){var p=pops[i];if(Math.abs(p.x-P.x)<62&&Math.abs(p.y-P.y)<62){pops.splice(i,1);P.freeze=2.2;tone(220,0.3);say("Tricky pop-up! Stop. Hands in your lap. Call a grown-up!",2.4);speak("Tricky pop-up! Stop. Call a grown-up.");break}}
 for(var j=0;j<shields.length;j++){var s=shields[j];if(Math.hypot(s.x-P.x,s.y-P.y)<56){shields.splice(j,1);score++;win();setProg();if(score>=5){setTimeout(function(){complete(2)},900)}break}}}}
+function upd4(){
+if(carry){carry.x=P.x;carry.y=P.y-62}
+if(!carry){for(var i=0;i<files.length;i++){var f=files[i];if(f.done)continue;if(Math.hypot(f.x-P.x,f.y-P.y)<56){carry=f;win();say("You picked up the "+f.n+". Carry it to its folder.",3);speak("The "+f.n+". Carry it to its folder.");break}}}
+else if(P.y<=252){
+var z=null;for(var k=0;k<FZ.length;k++){if(P.x>=FZ[k].x&&P.x<FZ[k].x+FZ[k].w)z=FZ[k]}
+if(z){
+if(z.id===carry.t){carry.done=true;placedN[z.id].push(carry.e);score++;win();say("Yes! The "+carry.n+" goes in "+z.name+".",3);speak("Yes! The "+carry.n+" goes in "+z.name+".");carry=null;P.y=330;P.tx=null;setProg();if(score===6){setTimeout(function(){complete(3)},1400)}}
+else{tone(220,0.3);say("Not "+z.name+". The "+carry.n+" goes in "+FN[carry.t]+".",3.2);speak("The "+carry.n+" goes in "+FN[carry.t]+".");carry.x=carry.hx;carry.y=carry.hy;carry=null;P.y=330;P.tx=null}}}}
+function drawFolders(){
+ctx.fillStyle="#BFE3FF";ctx.fillRect(0,0,W,250);ctx.fillStyle="#CFEFD5";ctx.fillRect(0,250,W,H-250);
+FZ.forEach(function(z){ctx.fillStyle=z.c;ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(z.x,16,z.w,220,22);ctx.fill();ctx.stroke();emo(z.e,z.x+z.w/2,66,56);txt(z.name,z.x+z.w/2,122,32);placedN[z.id].forEach(function(em,j){emo(em,z.x+z.w/2-40+j*80,186,44)})});
+files.forEach(function(f,i){if(f.done||f===carry)return;var by=f.y+Math.sin(tt*3+i)*5;emo(f.e,f.x,by,58);txt(f.n,f.x,by+44,22)})}
 function tower(x,y){ctx.fillStyle="#E4DED2";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(x-24,y-34,48,68,8);ctx.fill();ctx.stroke();ctx.fillStyle="#1F2A44";ctx.fillRect(x-14,y-22,28,6);ctx.fillRect(x-14,y-10,28,6);ctx.fillStyle="#FF8A3D";ctx.beginPath();ctx.arc(x,y+18,7,0,6.28);ctx.fill();ctx.stroke()}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
 function emo(e,x,y,s){ctx.font=s+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(e,x,y)}
@@ -120,7 +138,8 @@ function txt(t,x,y,s,c){ctx.font="800 "+s+"px 'Baloo 2',sans-serif";ctx.textAlig
 function drawTurtle(){
 var bob=Math.sin(tt*8)*(P.freeze>0?0:2);
 ctx.save();ctx.translate(P.x,P.y+bob);ctx.scale(P.face,1);emo("🐢",0,0,72);ctx.restore();
-if(P.freeze>0){txt("✋",P.x,P.y-56,40)}}
+if(P.freeze>0){txt("✋",P.x,P.y-56,40)}
+if(world===3&&carry){emo(carry.e,P.x,P.y-62,46)}}
 function draw(){
 ctx.clearRect(0,0,W,H);
 if(world===0){
@@ -136,12 +155,13 @@ emo("📥",55,260,48);txt("IN",55,320,48);emo("📤",W-55,260,48);txt("OUT",W-55
 if(doorIdx<doorList.length){var d=doorList[doorIdx];
 ctx.fillStyle="#FFFFFF";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(W/2-150,16,300,110,24);ctx.fill();ctx.stroke();
 emo(d.e,W/2-70,72,64);txt(d.n,W/2+50,72,32)}}
-else{
+else if(world===2){
 ctx.fillStyle="#3A4256";ctx.fillRect(0,0,W,H);
 lane=(lane+3)%60;ctx.fillStyle="#E4DED2";for(var x=160;x<W;x+=160){for(var y=-60+lane;y<H;y+=60){ctx.fillRect(x-4,y,8,30)}}
 pops.forEach(function(p){drawPop(p)});
 shields.forEach(function(s){emo("🛡️",s.x,s.y,52)});
 ctx.fillStyle="#FFFFFF";txt("🛡️ "+score+" / 5",110,34,30,"#FFFFFF")}
+else{drawFolders()}
 drawTurtle();
 if(P.freeze>0){ctx.fillStyle="rgba(31,42,68,.7)";ctx.fillRect(0,H/2-70,W,140);txt("STOP! Hands in your lap.",W/2,H/2-20,50,"#FFD23F");txt("Call a grown-up!",W/2,H/2+30,40,"#FFFFFF")}
 if(msgT>0&&msg){ctx.fillStyle="rgba(255,255,255,.95)";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(40,H-90,W-80,64,22);ctx.fill();ctx.stroke();txt(msg,W/2,H-58,msg.length>48?24:30)}}
