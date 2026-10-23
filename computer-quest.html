@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Turtle's Computer Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:16px 16px 32px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:700}
+#side{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#prog{font-size:28px;font-weight:800}
+#stage{position:relative;width:100%;max-width:960px;margin:0 auto;border:4px solid var(--fg);border-radius:24px;overflow:hidden;background:#BFE3FF}
+#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none;cursor:pointer}
+.card{position:absolute;inset:0;background:rgba(31,42,68,.88);color:#FFF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.card h2{margin:0;font-size:clamp(26px,5vw,52px);font-weight:800;line-height:1.1}
+.card p{margin:0;max-width:640px;font-size:clamp(18px,2.8vw,28px);font-weight:500;line-height:1.3}
+button{font:inherit;font-size:26px;font-weight:800;padding:10px 28px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:20px;padding:6px 16px;background:var(--ye)}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:4px}
+button:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(31,42,68,.3)}
+#cb{font-size:32px;padding:14px 40px;background:var(--ye)}
+#pad{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,72px);gap:8px;justify-content:center}
+.dp{width:72px;height:72px;font-size:34px;padding:0;background:var(--panel);color:var(--fg);border:4px solid var(--fg);box-shadow:none;border-radius:20px;touch-action:none;user-select:none;-webkit-user-select:none}
+.dp.up{grid-column:2;grid-row:1}.dp.left{grid-column:1;grid-row:2}.dp.down{grid-column:2;grid-row:2}.dp.right{grid-column:3;grid-row:2}
+.note{margin:0;text-align:center;font-size:20px;font-weight:600}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="104" height="78" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Turtle's Computer Quest</h1><p id="hint">Get ready!</p></div>
+<div id="side"><span id="prog"></span><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><button id="pause" class="small">⏸ Pause</button></div>
+</header>
+<div id="stage">
+<canvas id="cv" width="960" height="540" aria-label="Game area"></canvas>
+<div id="card" class="card"><h2 id="ct"></h2><p id="cp"></p><button id="cb"></button></div>
+</div>
+<div id="pad" aria-label="Move buttons"><button class="dp up" data-k="up" aria-label="Up">▲</button><button class="dp left" data-k="left" aria-label="Left">◀</button><button class="dp down" data-k="down" aria-label="Down">▼</button><button class="dp right" data-k="right" aria-label="Right">▶</button></div>
+<p class="note">Move with the arrow keys or W A S D. Or click or tap where you want the turtle to go.</p>
+</main>
+<script>
+var W=960,H=540,cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var $=function(id){return document.getElementById(id)};
+var keys={},P={x:480,y:440,tx:null,ty:null,freeze:0,face:1};
+var world=0,state="card",cardFn=null,items=[],got=0,doorList=[],doorIdx=0,pops=[],shields=[],score=0,spawnP=0,spawnS=0,msg="",msgT=0,playTime=0,lastTs=0,ac=null,voiceOn=true,tt=0,lane=0,hit=0;
+var PARTS=[{n:"Keyboard",e:"⌨️",s:"Keyboard. We type with it."},{n:"Mouse",e:"🖱️",s:"Mouse. We click with it."},{n:"Monitor",e:"🖥️",s:"Monitor. It shows us pictures."},{n:"CPU",e:"tower",s:"CPU. It is the brain of the computer."}];
+var TOYS=[{n:"Teddy",e:"🧸"},{n:"Ball",e:"⚽"}];
+var DOORS=[{n:"Keyboard",e:"⌨️",t:"in"},{n:"Mouse",e:"🖱️",t:"in"},{n:"Microphone",e:"🎤",t:"in"},{n:"Monitor",e:"🖥️",t:"out"},{n:"Speakers",e:"🔊",t:"out"},{n:"Printer",e:"🖨️",t:"out"}];
+var WORLDS=[
+{title:"World 1: Computer Town",intro:"Walk with the arrow keys, or click where you want to go. Find the computer parts: keyboard, mouse, monitor, and CPU. Toys are not computer parts!",hint:"Find the computer parts. Toys are not parts!",done:"You found the keyboard, mouse, monitor, and CPU."},
+{title:"World 2: The IN and OUT Doors",intro:"A picture shows at the top. Input sends things IN to the computer. Output sends things OUT to us. Walk to the left door for IN or the right door for OUT.",hint:"Input goes in. Output comes out. Pick a door.",done:"You know which devices are input and which are output."},
+{title:"World 3: Safe Street",intro:"Pop-ups are falling! If you touch one, you stop and call a grown-up. Dodge them, and collect 5 shields.",hint:"Dodge the pop-ups. Collect 5 shields.",done:"You dodged the pop-ups and stayed safe."}
+];
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t,s){msg=t;msgT=s||2.8}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function card(t,p,b,fn){state="card";$("ct").textContent=t;$("cp").textContent=p;$("cb").textContent=b;$("card").style.display="flex";cardFn=fn;speak(t+". "+p)}
+$("cb").addEventListener("click",function(){$("card").style.display="none";state="play";var f=cardFn;cardFn=null;if(f)f();tone(520,0.08)});
+function intro(i){world=i;card(WORLDS[i].title,WORLDS[i].intro,"Let's go!",function(){init(i)})}
+function complete(i){win();if(i<2){card("World "+(i+1)+" complete!",WORLDS[i].done,"Next world",function(){intro(i+1)})}else{card("You finished the Quest!","You know the computer parts, input and output, and how to stay safe. Great job, explorer!","Play again",function(){intro(0)})}}
+function init(i){
+P.x=480;P.y=440;P.tx=null;P.ty=null;P.freeze=0;msg="";msgT=0;score=0;
+$("hint").textContent=WORLDS[i].hint;
+if(i===0){got=0;items=[];var all=shuffle(PARTS.map(function(p){return{part:true,n:p.n,e:p.e,s:p.s}}).concat(TOYS.map(function(t){return{part:false,n:t.n,e:t.e}})));
+all.forEach(function(it){var ok=false,tries=0;while(!ok&&tries<200){tries++;it.x=90+Math.random()*(W-180);it.y=130+Math.random()*(H-230);ok=Math.hypot(it.x-P.x,it.y-P.y)>150;for(var k=0;k<items.length&&ok;k++){if(Math.hypot(it.x-items[k].x,it.y-items[k].y)<130)ok=false}}it.taken=false;items.push(it)});
+setProg()}
+else if(i===1){doorList=shuffle(DOORS);doorIdx=0;setProg()}
+else{pops=[];shields=[];spawnP=0.6;spawnS=1.2;setProg()}}
+function setProg(){var s="";if(world===0)s="Parts "+got+"/4";else if(world===1)s="Items "+doorIdx+"/"+doorList.length;else s="🛡️ "+score+"/5";$("prog").textContent=s}
+function breakCard(){card("Time for a break!","Stand up, stretch, and drink some water. Then come back to play.","I am back",function(){playTime=0})}
+function move(dt){
+var dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0),sp=300;
+if(dx||dy){P.tx=null;var l=Math.hypot(dx,dy);P.x+=dx/l*sp*dt;P.y+=dy/l*sp*dt;if(dx)P.face=dx>0?1:-1}
+else if(P.tx!==null){var vx=P.tx-P.x,vy=P.ty-P.y,d=Math.hypot(vx,vy);if(d<8){P.tx=null}else{P.x+=vx/d*sp*dt;P.y+=vy/d*sp*dt;if(Math.abs(vx)>4)P.face=vx>0?1:-1}}
+var top=world===0?100:world===1?150:230;
+P.x=Math.max(40,Math.min(W-40,P.x));P.y=Math.max(top,Math.min(H-40,P.y))}
+function update(dt){
+if(state!=="play")return;
+tt+=dt;playTime+=dt;if(playTime>=600){breakCard();return}
+if(msgT>0)msgT-=dt;
+if(P.freeze>0){P.freeze-=dt}else{move(dt)}
+if(world===0)upd1();else if(world===1)upd2();else upd3(dt)}
+function upd1(){
+items.forEach(function(it){if(it.taken)return;if(Math.hypot(it.x-P.x,it.y-P.y)<56){it.taken=true;
+if(it.part){got++;win();say(it.s,3.2);speak(it.s);setProg();if(got===4){setTimeout(function(){complete(0)},1400)}}
+else{tone(240,0.25);say("That is a toy, not a computer part.",2.5);speak("That is a toy, not a computer part.")}}})}
+function upd2(){
+if(doorIdx>=doorList.length)return;
+var d=doorList[doorIdx],side=null;
+if(P.x<115)side="in";else if(P.x>W-115)side="out";
+if(side){
+if(side===d.t){win();doorIdx++;setProg();say("Yes! "+d.n+" is "+(d.t==="in"?"input.":"output."),2.5);speak(d.n+" is "+(d.t==="in"?"input.":"output."));P.x=480;P.y=440;P.tx=null;if(doorIdx===doorList.length){setTimeout(function(){complete(1)},1400)}}
+else{tone(220,0.3);say("Not that door. "+d.n+" is "+(d.t==="in"?"input, so go left.":"output, so go right."),3);speak(d.n+" is "+(d.t==="in"?"input.":"output."));P.x=480;P.y=440;P.tx=null}}}
+function upd3(dt){
+spawnP-=dt;spawnS-=dt;
+if(spawnP<=0&&pops.length<5){pops.push({x:70+Math.random()*(W-140),y:-70,v:90+Math.random()*60,w:Math.floor(Math.random()*3)});spawnP=1.5+Math.random()*0.8}
+if(spawnS<=0&&shields.length<3){shields.push({x:60+Math.random()*(W-120),y:-40,v:80+Math.random()*40});spawnS=2.2+Math.random()}
+pops.forEach(function(p){p.y+=p.v*dt});shields.forEach(function(s){s.y+=s.v*dt});
+pops=pops.filter(function(p){return p.y<H+80});shields=shields.filter(function(s){return s.y<H+60});
+if(P.freeze<=0){
+for(var i=0;i<pops.length;i++){var p=pops[i];if(Math.abs(p.x-P.x)<62&&Math.abs(p.y-P.y)<62){pops.splice(i,1);P.freeze=2.2;tone(220,0.3);say("Tricky pop-up! Stop. Hands in your lap. Call a grown-up!",2.4);speak("Tricky pop-up! Stop. Call a grown-up.");break}}
+for(var j=0;j<shields.length;j++){var s=shields[j];if(Math.hypot(s.x-P.x,s.y-P.y)<56){shields.splice(j,1);score++;win();setProg();if(score>=5){setTimeout(function(){complete(2)},900)}break}}}}
+function tower(x,y){ctx.fillStyle="#E4DED2";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(x-24,y-34,48,68,8);ctx.fill();ctx.stroke();ctx.fillStyle="#1F2A44";ctx.fillRect(x-14,y-22,28,6);ctx.fillRect(x-14,y-10,28,6);ctx.fillStyle="#FF8A3D";ctx.beginPath();ctx.arc(x,y+18,7,0,6.28);ctx.fill();ctx.stroke()}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function emo(e,x,y,s){ctx.font=s+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(e,x,y)}
+function txt(t,x,y,s,c){ctx.font="800 "+s+"px 'Baloo 2',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=c||"#1F2A44";ctx.fillText(t,x,y)}
+function drawTurtle(){
+var bob=Math.sin(tt*8)*(P.freeze>0?0:2);
+ctx.save();ctx.translate(P.x,P.y+bob);ctx.scale(P.face,1);emo("🐢",0,0,72);ctx.restore();
+if(P.freeze>0){txt("✋",P.x,P.y-56,40)}}
+function draw(){
+ctx.clearRect(0,0,W,H);
+if(world===0){
+ctx.fillStyle="#BFE3FF";ctx.fillRect(0,0,W,120);ctx.fillStyle="#CFEFD5";ctx.fillRect(0,120,W,H-120);
+emo("🏠",120,70,56);emo("🏫",300,70,56);emo("🌳",520,70,56);emo("🏢",720,70,56);emo("🌳",880,70,56);
+items.forEach(function(it,i){if(it.taken)return;var by=it.y+Math.sin(tt*3+i)*5;
+if(it.e==="tower"){tower(it.x,by)}else{emo(it.e,it.x,by,60)}
+txt(it.part?it.n:"",it.x,by+48,22)})}
+else if(world===1){
+ctx.fillStyle="#FFF1D6";ctx.fillRect(0,0,W,H);
+ctx.fillStyle="#8EC5F0";ctx.fillRect(0,150,110,320);ctx.fillStyle="#FFB98A";ctx.fillRect(W-110,150,110,320);
+emo("📥",55,260,48);txt("IN",55,320,48);emo("📤",W-55,260,48);txt("OUT",W-55,320,48);
+if(doorIdx<doorList.length){var d=doorList[doorIdx];
+ctx.fillStyle="#FFFFFF";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(W/2-150,16,300,110,24);ctx.fill();ctx.stroke();
+emo(d.e,W/2-70,72,64);txt(d.n,W/2+50,72,32)}}
+else{
+ctx.fillStyle="#3A4256";ctx.fillRect(0,0,W,H);
+lane=(lane+3)%60;ctx.fillStyle="#E4DED2";for(var x=160;x<W;x+=160){for(var y=-60+lane;y<H;y+=60){ctx.fillRect(x-4,y,8,30)}}
+pops.forEach(function(p){drawPop(p)});
+shields.forEach(function(s){emo("🛡️",s.x,s.y,52)});
+ctx.fillStyle="#FFFFFF";txt("🛡️ "+score+" / 5",110,34,30,"#FFFFFF")}
+drawTurtle();
+if(P.freeze>0){ctx.fillStyle="rgba(31,42,68,.7)";ctx.fillRect(0,H/2-70,W,140);txt("STOP! Hands in your lap.",W/2,H/2-20,50,"#FFD23F");txt("Call a grown-up!",W/2,H/2+30,40,"#FFFFFF")}
+if(msgT>0&&msg){ctx.fillStyle="rgba(255,255,255,.95)";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(40,H-90,W-80,64,22);ctx.fill();ctx.stroke();txt(msg,W/2,H-58,msg.length>48?24:30)}}
+var POPT=["🎁 You won!","📱 Free phone!","💰 Free money!"];
+function drawPop(p){
+ctx.fillStyle="#FFFFFF";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(p.x-55,p.y-50,110,100,14);ctx.fill();ctx.stroke();
+ctx.fillStyle="#FF8A3D";ctx.fillRect(p.x-53,p.y-48,106,24);
+txt("Hooray!",p.x,p.y-36,18);emo(["🎁","📱","💰"][p.w],p.x,p.y-2,38);
+ctx.fillStyle="#2BB5A0";rr(p.x-34,p.y+24,68,20,10);ctx.fill();txt("CLICK",p.x,p.y+34,14)}
+function loop(ts){var dt=Math.min(0.05,(ts-lastTs)/1000||0);lastTs=ts;update(dt);draw();requestAnimationFrame(loop)}
+var KM={arrowleft:"left",a:"left",arrowright:"right",d:"right",arrowup:"up",w:"up",arrowdown:"down",s:"down"};
+document.addEventListener("keydown",function(e){var k=KM[e.key.toLowerCase()];if(k){keys[k]=true;if(e.key.indexOf("Arrow")===0)e.preventDefault()}});
+document.addEventListener("keyup",function(e){var k=KM[e.key.toLowerCase()];if(k)keys[k]=false});
+window.addEventListener("blur",function(){keys={}});
+cv.addEventListener("pointerdown",function(e){if(state!=="play"||P.freeze>0)return;var b=cv.getBoundingClientRect();P.tx=(e.clientX-b.left)*W/b.width;P.ty=(e.clientY-b.top)*H/b.height});
+var dps=document.querySelectorAll(".dp");
+for(var i=0;i<dps.length;i++){(function(b){var k=b.dataset.k;
+b.addEventListener("pointerdown",function(e){e.preventDefault();keys[k]=true});
+["pointerup","pointerleave","pointercancel"].forEach(function(ev){b.addEventListener(ev,function(){keys[k]=false})})})(dps[i])}
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak($("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+$("pause").addEventListener("click",function(){if(state==="play"){card("Paused","Take a breath. Press the button to keep playing.","Keep playing",null)}});
+intro(0);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
