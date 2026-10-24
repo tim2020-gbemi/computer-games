@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Typing Rocket</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:16px 16px 32px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:700}
+#side{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#prog{font-size:26px;font-weight:800}
+#stage{position:relative;width:100%;max-width:960px;margin:0 auto;border:4px solid var(--fg);border-radius:24px;overflow:hidden;background:#0F1B3D}
+#cv{display:block;width:100%;height:auto;aspect-ratio:16/9}
+.card{position:absolute;inset:0;background:rgba(15,27,61,.92);color:#FFF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.card h2{margin:0;font-size:clamp(26px,5vw,52px);font-weight:800;line-height:1.1}
+.card p{margin:0;max-width:640px;font-size:clamp(18px,2.8vw,28px);font-weight:500;line-height:1.3}
+#nm{display:none;font:inherit;font-size:clamp(28px,5vw,48px);font-weight:700;padding:8px 20px;border-radius:20px;border:4px solid #FFD23F;width:min(90%,420px);text-align:center;background:#fff;color:#1F2A44}
+#nm:focus{outline:4px solid #FFF8EC}
+#ncap{display:none;font-size:18px;font-weight:500}
+#cerr{min-height:28px;color:#FFD23F;font-weight:800;font-size:22px}
+button{font:inherit;font-size:26px;font-weight:800;padding:10px 28px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:20px;padding:6px 16px;background:var(--ye)}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:4px}
+#cb{font-size:32px;padding:14px 40px;background:var(--ye)}
+#kb{display:flex;flex-direction:column;align-items:center;gap:6px}
+.row{display:flex;gap:6px;justify-content:center}
+.kb{width:clamp(28px,8.4vw,56px);height:clamp(40px,9vw,56px);border-radius:10px;border:3px solid var(--fg);background:var(--panel);color:var(--fg);font:inherit;font-size:clamp(16px,3vw,26px);font-weight:800;padding:0;box-shadow:none;touch-action:manipulation}
+.kb.hint{background:#FFD23F;color:#1F2A44;animation:glow .8s infinite alternate}
+@keyframes glow{from{transform:scale(1)}to{transform:scale(1.18)}}
+.note{margin:0;text-align:center;font-size:20px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.kb.hint{animation:none;outline:4px solid #1F2A44}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="104" height="78" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Typing Rocket</h1><p id="hint">Get ready!</p></div>
+<div id="side"><span id="prog"></span><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><button id="pause" class="small">⏸ Pause</button></div>
+</header>
+<div id="stage">
+<canvas id="cv" width="960" height="540" aria-label="Game area"></canvas>
+<div id="card" class="card"><h2 id="ct"></h2><p id="cp"></p><input id="nm" type="text" maxlength="12" autocomplete="off" aria-label="Your first name" placeholder="Type your name"><p id="ncap">Your name stays on this screen. It is not saved or sent anywhere.</p><div id="cerr" role="status"></div><button id="cb"></button></div>
+</div>
+<div id="kb" aria-label="On-screen keyboard"></div>
+<p class="note">Find the glowing key on the keyboard and press it. You can also click the keys on the screen.</p>
+<p class="note">Version 1</p>
+</main>
+<script>
+var W=960,H=540,cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var $=function(id){return document.getElementById(id)};
+var level=0,queue=[],qi=0,cur=null,score=0,total=0,state="card",cardFn=null,cardCheck=null,uname="",msg="",msgT=0,missiles=[],parts=[],tt=0,playTime=0,lastTs=0,ac=null,voiceOn=true,nextT=0;
+var COLS=["#FF8A3D","#2BB5A0","#FFD23F","#8EC5F0","#FFB98A"];
+var STARS=[];for(var s=0;s<70;s++)STARS.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*2,p:Math.random()*6});
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+var LV=[
+{title:"Level 1: Letter Launch",intro:"A letter floats down. Find that letter on the keyboard and press it to launch your rocket! Watch for the glowing key.",hint:"Press the letter you see.",speed:42,targets:function(){return shuffle("ABCDEMOSTPLN".split("")).slice(0,8)}},
+{title:"Level 2: My Name",intro:"Type your first name! Press the letters in order to launch your rocket.",hint:"Type your name, one letter at a time.",speed:36,targets:function(){return[uname,uname]}},
+{title:"Level 3: Word Rocket",intro:"Words are floating down! Type each word, one letter at a time, to launch your rocket.",hint:"Type the word, letter by letter.",speed:32,targets:function(){return shuffle(["CAT","SUN","DOG","BUS","HAT","PIG","MOM","DAD"]).slice(0,5)}}
+];
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t,s){msg=t;msgT=s||2.4}
+function card(t,p,b,fn,chk){state="card";$("ct").textContent=t;$("cp").textContent=p;$("cb").textContent=b;$("cerr").textContent="";$("card").style.display="flex";cardFn=fn;cardCheck=chk||null;speak(t+". "+p)}
+$("cb").addEventListener("click",function(){if(cardCheck&&!cardCheck())return;$("card").style.display="none";state="play";var f=cardFn;cardFn=null;cardCheck=null;if(f)f();tone(520,0.08)});
+function checkName(){var v=$("nm").value.replace(/[^A-Za-z]/g,"").toUpperCase().slice(0,12);if(!v){$("cerr").textContent="Type some letters first.";tone(220,0.2);return false}uname=v;return true}
+function startLevel(l){
+$("nm").style.display=l===1?"block":"none";$("ncap").style.display=l===1?"block":"none";
+card(LV[l].title,LV[l].intro,"Launch!",function(){begin(l)},l===1?checkName:null);
+if(l===1){setTimeout(function(){$("nm").focus()},300)}}
+function begin(l){level=l;queue=LV[l].targets();qi=0;score=0;total=queue.length;cur=null;missiles=[];parts=[];nextT=0.6;msg="";msgT=0;$("hint").textContent=LV[l].hint;setProg();setKey(null)}
+function setProg(){$("prog").textContent="Level "+(level+1)+" · ⭐ "+score+"/"+total}
+function setKey(ch){var ks=document.querySelectorAll(".kb");for(var i=0;i<ks.length;i++){ks[i].classList.toggle("hint",ks[i].dataset.c===ch)}}
+function instr(){if(!cur)return"";var t=cur.text;if(t.length===1)return"Press the letter "+t+".";return(level===1?"Type your name. ":"Type the word "+t+". ")+t.split("").join(", ")+"."}
+function newX(w){return w/2+50+Math.random()*(W-w-100)}
+function spawn(){var t=queue[qi],w=t.length>1?t.length*72+70:120;cur={text:t,i:0,x:newX(w),y:-70,vy:LV[level].speed,w:w,col:COLS[qi%COLS.length],locked:false};setKey(t[0]);say("");speak(instr())}
+function breakCard(){card("Time for a break!","Stand up, stretch, and drink some water. Then come back to play.","I am back",function(){playTime=0})}
+function levelDone(){win();if(level<2){card("Level "+(level+1)+" complete!","Great typing, pilot!","Next level",function(){startLevel(level+1)})}else{card("You finished Typing Rocket!","You can find letters, type your name, and type words. Great job, pilot!","Play again",function(){startLevel(0)})}}
+function fire(pop){var tx=cur.x,ty=cur.y;missiles.push({x:480,y:350,pop:pop,a:Math.atan2(ty-350,tx-480)})}
+function popBubble(){if(!cur)return;for(var k=0;k<26;k++){var a=Math.random()*6.28,sp=80+Math.random()*220;parts.push({x:cur.x,y:cur.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:1,c:COLS[k%COLS.length]})}score++;setProg();win();say("Great job!",1.4);cur=null;qi++;nextT=0.9;setKey(null)}
+function press(ch){
+if(state!=="play"||!cur||cur.locked)return;
+var want=cur.text.charAt(cur.i);
+if(ch===want){cur.i++;tone(500+cur.i*70,0.1);var last=cur.i===cur.text.length;if(last)cur.locked=true;fire(last);if(!last){setKey(cur.text.charAt(cur.i))}else{setKey(null)}}
+else{tone(220,0.2);say("Look for the glowing key: "+want,2.2);speak("Look for the letter "+want+".")}}
+function update(dt){
+if(state!=="play")return;
+tt+=dt;playTime+=dt;if(playTime>=600){breakCard();return}
+if(msgT>0)msgT-=dt;
+if(!cur&&nextT>0){nextT-=dt;if(nextT<=0){nextT=-1;if(qi<queue.length)spawn();else levelDone()}}
+if(cur&&!cur.locked){cur.y+=cur.vy*dt;if(cur.y>H-200){cur.y=-70;cur.x=newX(cur.w);say("Almost! Press the glowing key.",2.4);tone(260,0.2);speak("Try again. "+instr())}}
+for(var i=missiles.length-1;i>=0;i--){var m=missiles[i];if(!cur){missiles.splice(i,1);continue}
+var vx=cur.x-m.x,vy=cur.y-m.y,d=Math.hypot(vx,vy);m.a=Math.atan2(vy,vx);
+if(d<34){missiles.splice(i,1);if(m.pop){popBubble()}else{for(var k=0;k<8;k++){var a=Math.random()*6.28;parts.push({x:cur.x,y:cur.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,l:0.6,c:"#FFD23F"})}}}
+else{var sp=1500*dt;m.x+=vx/d*sp;m.y+=vy/d*sp}}
+for(var j=parts.length-1;j>=0;j--){var p=parts[j];p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt*1.4;if(p.l<=0)parts.splice(j,1)}}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function emo(e,x,y,s){ctx.font=s+"px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(e,x,y)}
+function txt(t,x,y,s,c){ctx.font="800 "+s+"px 'Baloo 2',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle=c||"#1F2A44";ctx.fillText(t,x,y)}
+function drawRocket(){
+ctx.fillStyle="#6B7280";ctx.fillRect(400,500,160,24);
+var f=Math.sin(tt*30)*8;ctx.fillStyle="#FFD23F";ctx.beginPath();ctx.moveTo(466,474);ctx.lineTo(494,474);ctx.lineTo(480,506+f);ctx.closePath();ctx.fill();
+ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;ctx.fillStyle="#FF8A3D";
+ctx.beginPath();ctx.moveTo(456,452);ctx.lineTo(428,484);ctx.lineTo(456,474);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.beginPath();ctx.moveTo(504,452);ctx.lineTo(532,484);ctx.lineTo(504,474);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.fillStyle="#FFFFFF";rr(456,396,48,80,16);ctx.fill();ctx.stroke();
+ctx.fillStyle="#FF8A3D";ctx.beginPath();ctx.moveTo(456,398);ctx.lineTo(504,398);ctx.lineTo(480,346);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.fillStyle="#8EC5F0";ctx.beginPath();ctx.arc(480,428,11,0,6.28);ctx.fill();ctx.stroke()}
+function draw(){
+var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#0F1B3D");g.addColorStop(1,"#2B4A94");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+STARS.forEach(function(s){ctx.globalAlpha=0.5+0.5*Math.sin(tt*2+s.p);ctx.fillStyle="#FFFFFF";ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;
+drawRocket();
+if(cur){
+if(cur.text.length===1){ctx.fillStyle=cur.col;ctx.strokeStyle="#FFFFFF";ctx.lineWidth=6;ctx.beginPath();ctx.arc(cur.x,cur.y,64,0,6.28);ctx.fill();ctx.stroke();txt(cur.text,cur.x,cur.y+4,92)}
+else{ctx.fillStyle=cur.col;ctx.strokeStyle="#FFFFFF";ctx.lineWidth=6;rr(cur.x-cur.w/2,cur.y-62,cur.w,124,50);ctx.fill();ctx.stroke();
+var n=cur.text.length,x0=cur.x-(n*72)/2+36;for(var k=0;k<n;k++){txt(cur.text.charAt(k),x0+k*72,cur.y+4,80,k<cur.i?"#0B7A4A":"#1F2A44")}}}
+missiles.forEach(function(m){ctx.save();ctx.translate(m.x,m.y);ctx.rotate(m.a+Math.PI/4);emo("🚀",0,0,46);ctx.restore()});
+parts.forEach(function(p){ctx.globalAlpha=Math.max(0,p.l);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,6,0,6.28);ctx.fill()});ctx.globalAlpha=1;
+if(msgT>0&&msg){ctx.fillStyle="rgba(255,255,255,.95)";ctx.strokeStyle="#1F2A44";ctx.lineWidth=4;rr(120,22,W-240,60,22);ctx.fill();ctx.stroke();txt(msg,W/2,52,msg.length>40?24:30)}}
+function loop(ts){var dt=Math.min(0.05,(ts-lastTs)/1000||0);lastTs=ts;update(dt);draw();requestAnimationFrame(loop)}
+document.addEventListener("keydown",function(e){if(e.ctrlKey||e.metaKey||e.altKey)return;var k=e.key;if(k.length===1&&/[a-zA-Z]/.test(k)){press(k.toUpperCase())}});
+var ROWS=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+ROWS.forEach(function(r){var d=document.createElement("div");d.className="row";r.split("").forEach(function(c){var b=document.createElement("button");b.className="kb";b.textContent=c;b.dataset.c=c;b.setAttribute("aria-label","Key "+c);b.addEventListener("pointerdown",function(e){e.preventDefault();press(c)});d.appendChild(b)});$("kb").appendChild(d)});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak(cur?instr():$("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+$("pause").addEventListener("click",function(){if(state==="play"){card("Paused","Take a breath. Press the button to keep playing.","Keep playing",null)}});
+startLevel(0);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
