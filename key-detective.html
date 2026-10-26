@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Key Detective</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:16px 16px 32px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:700}
+#side{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#stars{font-size:36px;letter-spacing:4px}
+.clue{background:var(--panel);border:4px solid var(--fg);border-radius:28px;padding:20px 24px;display:flex;align-items:center;gap:24px;min-height:170px;color:#1F2A44}
+.clue .em{font-size:clamp(64px,12vw,110px);line-height:1}
+.clue .ct{font-size:clamp(24px,4.4vw,44px);font-weight:800;line-height:1.15}
+.clue .cn{font-size:clamp(16px,2.4vw,22px);font-weight:600;color:#5A5F6B}
+.clue.shake{animation:shake .35s}
+#kb{display:flex;flex-direction:column;gap:6px;width:100%}
+.kr{display:flex;gap:5px}
+.kb{flex:1 1 0;min-width:0;height:clamp(38px,7.4vw,54px);border-radius:10px;border:3px solid var(--fg);background:var(--panel);color:var(--fg);font:inherit;font-size:clamp(12px,2.4vw,20px);font-weight:800;padding:0;box-shadow:none;touch-action:manipulation;position:relative}
+.kb.w{flex:2 1 0}
+.kb.sp{flex:7 1 0}
+.kb.bump::after{content:"";position:absolute;left:50%;bottom:5px;width:40%;height:4px;margin-left:-20%;background:currentColor;border-radius:2px}
+.kb.flash{background:#7FD6B8;color:#1F2A44}
+.kb.hint{background:#FFD23F;color:#1F2A44;animation:glow .8s infinite alternate}
+@keyframes glow{from{transform:scale(1)}to{transform:scale(1.12)}}
+@keyframes shake{25%{translate:-8px}75%{translate:8px}}
+#msg{min-height:44px;font-size:clamp(22px,3.8vw,34px);font-weight:800;text-align:center}
+button{font:inherit;font-size:26px;font-weight:800;padding:10px 28px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:20px;padding:6px 16px;background:var(--ye)}
+button.kb{box-shadow:none;border-radius:10px;padding:0;font-size:clamp(12px,2.4vw,20px)}
+#next,#again{align-self:center;font-size:32px;padding:14px 36px}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+#done{display:none;text-align:center;flex-direction:column;align-items:center;gap:16px;padding:32px 16px}
+#done .party{font-size:110px;line-height:1.1}
+#done h2{margin:0;font-size:clamp(36px,7vw,60px);font-weight:800}
+#done p{margin:0;font-size:clamp(22px,4vw,32px);font-weight:500}
+.note{margin:0;text-align:center;font-size:20px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.kb.hint{animation:none;outline:4px solid #1F2A44}.clue.shake{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="104" height="78" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Key Detective</h1><p id="hint"></p></div>
+<div id="side"><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><div id="stars" aria-label="Progress"></div></div>
+</header>
+<section id="play">
+<div id="clue" class="clue"><span class="em" id="cem"></span><div><div class="ct" id="ctx"></div><div class="cn" id="ccn"></div></div></div>
+</section>
+<div id="msg" role="status" aria-live="polite"></div>
+<div id="kb" aria-label="On-screen keyboard"></div>
+<button id="next" hidden>Next round</button>
+<section id="done">
+<div class="party">🕵️</div>
+<h2>You are a Key Detective!</h2>
+<p>You can find the special keys, the letter rows, and the numbers. Show your grown-up!</p>
+<button id="again">Play again</button>
+</section>
+<p class="note">Press the keys on your keyboard. You can also click the keys on the screen.</p>
+</main>
+<script>
+var TOP="QWERTYUIOP",MID="ASDFGHJKL",BOT="ZXCVBNM",NUM="1234567890";
+var ARR=["UP","DOWN","LEFT","RIGHT"];
+function inS(s){return function(id){return id.length===1&&s.indexOf(id)>-1}}
+function arr(s){return s.split("")}
+var ROUNDS=[
+{name:"Special keys",hint:"Round 1: Special keys. Listen to the clue. Find the key and press it.",clues:[
+{e:"➖",t:"Find the longest key at the bottom.",ok:function(id){return id==="SPACE"},hl:["SPACE"],n:"the Space bar"},
+{e:"↩️",t:"Find the key that starts a new line.",ok:function(id){return id==="ENTER"},hl:["ENTER"],n:"the Enter key"},
+{e:"🧽",t:"Find the key that erases a letter.",ok:function(id){return id==="BACKSPACE"},hl:["BACKSPACE"],n:"the Backspace key"},
+{e:"🔠",t:"Find the key that makes a big letter. It is called Shift.",ok:function(id){return id==="SHIFT"},hl:["SHIFT"],n:"the Shift key"},
+{e:"🧭",t:"Find any arrow key.",ok:function(id){return ARR.indexOf(id)>-1},hl:ARR,n:"an arrow key"}]},
+{name:"Letter rows",hint:"Round 2: Letter rows. Listen to the clue. Find the key and press it.",clues:[
+{e:"⬆️",t:"Press any key in the top row of letters.",ok:inS(TOP),hl:arr(TOP),n:"a top row key"},
+{e:"⏺️",t:"Press any key in the middle row of letters.",ok:inS(MID),hl:arr(MID),n:"a middle row key"},
+{e:"⬇️",t:"Press any key in the bottom row of letters.",ok:inS(BOT),hl:arr(BOT),n:"a bottom row key"},
+{e:"👈",t:"Press the key with a bump on the left. It is the letter F.",ok:function(id){return id==="F"},hl:["F"],n:"the letter F"},
+{e:"👉",t:"Press the key with a bump on the right. It is the letter J.",ok:function(id){return id==="J"},hl:["J"],n:"the letter J"}]},
+{name:"Numbers",hint:"Round 3: Numbers. Listen to the clue. Find the key and press it.",clues:[
+{e:"1️⃣",t:"Press the number 1.",ok:function(id){return id==="1"},hl:["1"],n:"the number 1"},
+{e:"5️⃣",t:"Press the number 5.",ok:function(id){return id==="5"},hl:["5"],n:"the number 5"},
+{e:"9️⃣",t:"Press the number 9.",ok:function(id){return id==="9"},hl:["9"],n:"the number 9"},
+{e:"0️⃣",t:"Press the number 0.",ok:function(id){return id==="0"},hl:["0"],n:"the number 0"},
+{e:"🔢",t:"Press any number key.",ok:function(id){return id.length===1&&NUM.indexOf(id)>-1},hl:arr(NUM),n:"a number key"}]}
+];
+var KROWS=[
+arr(NUM).map(function(c){return[c,c]}).concat([["BACKSPACE","⌫ Back","w"]]),
+arr(TOP).map(function(c){return[c,c]}),
+arr(MID).map(function(c){return[c,c]}).concat([["ENTER","Enter ↵","w"]]),
+[["SHIFT","Shift ⇧","w"]].concat(arr(BOT).map(function(c){return[c,c]})).concat([["SHIFT","Shift ⇧","w"]]),
+[["SPACE","Space","sp"],["LEFT","◀"],["UP","▲"],["DOWN","▼"],["RIGHT","▶"]]
+];
+var NAMES={SPACE:"the Space bar",ENTER:"the Enter key",BACKSPACE:"the Backspace key",SHIFT:"the Shift key",UP:"an arrow key",DOWN:"an arrow key",LEFT:"an arrow key",RIGHT:"an arrow key"};
+var r=0,list=[],ci=0,cur=null,wrong=0,locked=true,ac=null,voiceOn=true;
+var $=function(id){return document.getElementById(id)};
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function stars(){var s="";for(var i=0;i<ROUNDS.length;i++){s+=i<r?"⭐":"☆"}$("stars").textContent=s}
+function nm(id){if(NAMES[id])return NAMES[id];if(/[0-9]/.test(id))return"the number "+id;return"the letter "+id}
+function setHint(ids){var ks=document.querySelectorAll(".kb");for(var i=0;i<ks.length;i++){ks[i].classList.toggle("hint",!!ids&&ids.indexOf(ks[i].dataset.id)>-1)}}
+function buildKb(){
+var kb=$("kb");kb.innerHTML="";
+KROWS.forEach(function(row){var d=document.createElement("div");d.className="kr";
+row.forEach(function(k){var b=document.createElement("button");b.className="kb"+(k[2]?" "+k[2]:"")+((k[0]==="F"||k[0]==="J")?" bump":"");b.textContent=k[1];b.dataset.id=k[0];b.setAttribute("aria-label",nm(k[0]));
+b.addEventListener("pointerdown",function(e){e.preventDefault();press(k[0])});d.appendChild(b)});kb.appendChild(d)})}
+function startRound(){
+var R=ROUNDS[r];list=shuffle(R.clues);ci=0;stars();$("hint").textContent=R.hint;$("next").hidden=true;$("done").style.display="none";$("play").style.display="";$("kb").style.display="";
+say("");speak(R.hint);setTimeout(showClue,R.hint.length*55+400)}
+function showClue(){
+cur=list[ci];wrong=0;locked=false;setHint(null);
+$("cem").textContent=cur.e;$("ctx").textContent=cur.t;$("ccn").textContent="Clue "+(ci+1)+" of "+list.length;
+say("");speak(cur.t)}
+function flash(id){var ks=document.querySelectorAll(".kb");for(var i=0;i<ks.length;i++){if(ks[i].dataset.id===id){(function(k){k.classList.add("flash");setTimeout(function(){k.classList.remove("flash")},300)})(ks[i])}}}
+function press(id){
+if(locked||!cur)return;
+flash(id);
+if(cur.ok(id)){locked=true;win();setHint(null);var m="Yes! That is "+nm(id)+".";say(m);speak(m);ci++;setTimeout(function(){if(ci>=list.length){roundDone()}else{showClue()}},1900)}
+else{wrong++;tone(220,0.2);var c=$("clue");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");
+var m2="That is "+nm(id)+". Try again!";say(m2);speak(m2);if(wrong>=2){setHint(cur.hl)}}}
+function roundDone(){
+cur=null;locked=true;setHint(null);
+if(r<ROUNDS.length-1){say("Round complete! Great detective work!");speak("Round complete! Great detective work!");$("next").hidden=false}
+else{finish()}}
+function finish(){r=ROUNDS.length;stars();$("play").style.display="none";$("kb").style.display="none";say("");$("hint").textContent="";$("done").style.display="flex";tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);speak("You are a Key Detective!")}
+function idOf(e){var k=e.key;if(k===" ")return"SPACE";if(k==="Enter")return"ENTER";if(k==="Backspace")return"BACKSPACE";if(k==="Shift")return"SHIFT";
+if(k==="ArrowUp")return"UP";if(k==="ArrowDown")return"DOWN";if(k==="ArrowLeft")return"LEFT";if(k==="ArrowRight")return"RIGHT";
+if(k.length===1){if(/[a-zA-Z]/.test(k))return k.toUpperCase();if(/[0-9]/.test(k))return k}return null}
+document.addEventListener("keydown",function(e){
+if(e.ctrlKey||e.metaKey||e.altKey)return;
+var id=idOf(e);if(!id)return;
+if(e.repeat){e.preventDefault();return}
+e.preventDefault();press(id)});
+$("next").addEventListener("click",function(){r++;startRound()});
+$("again").addEventListener("click",function(){r=0;startRound()});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak(cur?cur.t:$("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+buildKb();startRound();
+</script>
+</body>
+</html>
