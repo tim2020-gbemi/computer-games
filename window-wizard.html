@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Window Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:16px 16px 32px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(18px,2.8vw,28px);font-weight:700}
+#side{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#prog{font-size:26px;font-weight:800}
+#desk{position:relative;width:100%;max-width:960px;margin:0 auto;aspect-ratio:16/9;background:linear-gradient(#BFE3FF,#8EC5F0);border:4px solid var(--fg);border-radius:24px;overflow:hidden;user-select:none;-webkit-user-select:none}
+.zone{position:absolute;border:4px dashed #FF8A3D;border-radius:16px;background:rgba(255,138,61,.2);display:none}
+#ztl{left:1%;top:1.5%;width:26%;height:32%}
+#zbr{right:1%;bottom:12.5%;width:26%;height:32%}
+#win{position:absolute;background:#fff;border:4px solid #1F2A44;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;color:#1F2A44}
+#win.anim{transition:left .5s,top .5s}
+#tb{display:flex;justify-content:space-between;align-items:center;padding:0 8px;height:clamp(32px,6.4vw,50px);flex:none;background:#E4DED2;border-bottom:3px solid #1F2A44;cursor:grab;touch-action:none}
+#tb.hint{background:#FF8A3D}
+#tb.grab{cursor:grabbing}
+.ttl{font-size:clamp(14px,2.6vw,22px);font-weight:800}
+.btns{display:flex;gap:6px}
+.wb{width:clamp(32px,6vw,46px);height:clamp(24px,4.6vw,34px);font:inherit;font-weight:800;font-size:clamp(14px,2.8vw,22px);border:3px solid #1F2A44;border-radius:8px;background:#fff;color:#1F2A44;padding:0;box-shadow:none;cursor:pointer;line-height:1}
+.wb.x{background:#E63946;color:#fff}
+.hint{animation:pulse .7s infinite alternate}
+.wb.hint,#ticon.hint{outline:4px solid #FF8A3D;outline-offset:2px}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.12)}}
+#tb.hint{animation:none}
+.wbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;overflow:hidden}
+.art{font-size:clamp(30px,9vw,80px);line-height:1}
+.wbody p{margin:0;font-size:clamp(14px,2.6vw,24px);font-weight:700}
+#rs{position:absolute;right:0;bottom:0;width:clamp(22px,4vw,34px);height:clamp(22px,4vw,34px);cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 50%,#FF8A3D 50%)}
+#rs.hint{animation:pulse .7s infinite alternate}
+#bar{position:absolute;left:0;right:0;bottom:0;height:11%;background:#1F2A44;display:flex;align-items:center;padding:0 10px}
+#ticon{height:78%;aspect-ratio:1;font-size:clamp(16px,3.4vw,30px);background:#fff;border:3px solid #fff;border-radius:10px;padding:0;box-shadow:none;cursor:pointer;line-height:1}
+#ticon.lit{background:#FFD23F}
+#ov{position:absolute;inset:0;background:rgba(31,42,68,.9);color:#FFF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+#ov h2{margin:0;font-size:clamp(24px,5vw,48px);font-weight:800;line-height:1.1}
+#ov p{margin:0;max-width:600px;font-size:clamp(16px,2.8vw,26px);font-weight:500;line-height:1.3}
+#msg{min-height:42px;font-size:clamp(20px,3.6vw,32px);font-weight:800;text-align:center}
+button{font:inherit;font-size:26px;font-weight:800;padding:10px 28px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:20px;padding:6px 16px;background:var(--ye)}
+button.wb,button#ticon{box-shadow:none}
+#ob{font-size:30px;padding:12px 36px;background:var(--ye)}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+.note{margin:0;text-align:center;font-size:20px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.hint{animation:none}#win.anim{transition:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="104" height="78" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Window Wizard</h1><p id="hint">Get ready!</p></div>
+<div id="side"><span id="prog"></span><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button></div>
+</header>
+<div id="desk">
+<div id="ztl" class="zone"></div>
+<div id="zbr" class="zone"></div>
+<div id="win">
+<div id="tb"><span class="ttl">🎨 Paint</span><span class="btns"><button id="bmin" class="wb" aria-label="Minimize">_</button><button id="bmax" class="wb" aria-label="Maximize">□</button><button id="bx" class="wb x" aria-label="Close">X</button></span></div>
+<div class="wbody"><span class="art">🎨</span><p>Hello!</p></div>
+<div id="rs" aria-label="Resize corner"></div>
+</div>
+<div id="bar"><button id="ticon" aria-label="Paint on the taskbar">🎨</button></div>
+<div id="ov"><h2 id="oh"></h2><p id="op"></p><button id="ob"></button></div>
+</div>
+<div id="msg" role="status" aria-live="polite"></div>
+<p class="note">Use the mouse. Click the buttons. Hold and drag the top bar. Drag the orange corner to change the size.</p>
+</main>
+<script>
+var $=function(id){return document.getElementById(id)};
+var DEF={l:0.26,t:0.14,w:0.44,h:0.5},BAR=0.11;
+var rect={l:DEF.l,t:DEF.t,w:DEF.w,h:DEF.h},state="normal",prevState="normal",ti=0,started=false,score=0,ac=null,voiceOn=true,ovFn=null;
+function inTL(){return rect.l<0.12&&rect.t<0.15}
+function inBR(){return rect.l+rect.w>0.88&&rect.t+rect.h>0.72}
+function moveAway(){rect.l=0.08;rect.t=0.06;anim()}
+var TASKS=[
+{t:"Click the dash to make the window sleep.",ev:"min",hl:"bmin"},
+{t:"Click the icon at the bottom to wake it up.",ev:"wake",hl:"ticon"},
+{t:"Click the square to make the window giant.",ev:"max",hl:"bmax"},
+{t:"Click the square again to make it normal.",ev:"unmax",hl:"bmax"},
+{t:"Hold the top bar and drag the window to the top-left corner.",ev:"drag",test:inTL,hl:"tb",zone:"ztl",fail:"Almost! Drag it closer to the dashed corner."},
+{t:"Now drag the window to the bottom-right corner.",ev:"drag",test:inBR,hl:"tb",zone:"zbr",fail:"Almost! Drag it closer to the dashed corner."},
+{t:"Hold the orange corner and make the window small.",ev:"resize",test:function(){return rect.w<0.3},hl:"rs",prep:moveAway,fail:"Drag the corner inward to make it smaller."},
+{t:"Now make the window big again.",ev:"resize",test:function(){return rect.w>0.55},hl:"rs",prep:moveAway,fail:"Drag the corner outward to make it bigger."},
+{t:"Click the red X to say goodbye.",ev:"close",hl:"bx"},
+{t:"Simon says: make the window giant!",ev:"max",simon:true},
+{t:"Simon says: hide the window!",ev:"min",simon:true},
+{t:"Wake it back up!",ev:"wake",simon:true},
+{t:"Simon says: say goodbye!",ev:"close",simon:true}
+];
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function anim(){var w=$("win");w.classList.add("anim");apply();setTimeout(function(){w.classList.remove("anim")},600)}
+function apply(){
+var w=$("win"),ic=$("ticon");
+if(state==="closed"||state==="min"){w.style.display="none"}else{w.style.display="flex"}
+if(state==="max"){w.style.left="0";w.style.top="0";w.style.width="100%";w.style.height=(100-BAR*100)+"%";$("rs").style.display="none"}
+else{w.style.left=rect.l*100+"%";w.style.top=rect.t*100+"%";w.style.width=rect.w*100+"%";w.style.height=rect.h*100+"%";$("rs").style.display=""}
+ic.style.display=state==="closed"?"none":"";ic.classList.toggle("lit",state==="min");
+$("bmax").textContent=state==="max"?"❐":"□"}
+function respawn(){state="normal";rect={l:DEF.l,t:DEF.t,w:DEF.w,h:DEF.h};apply()}
+function clearHints(){["bmin","bmax","bx","ticon","tb","rs"].forEach(function(id){$(id).classList.remove("hint")});$("ztl").style.display="none";$("zbr").style.display="none"}
+function setProg(){$("prog").textContent="⭐ "+score+"/"+TASKS.length}
+function startTask(){
+var T=TASKS[ti];clearHints();
+if(T.prep)T.prep();
+if(T.hl)$(T.hl).classList.add("hint");
+if(T.zone)$(T.zone).style.display="block";
+$("hint").textContent=(T.simon?"Simon Says! ":"Mission "+(ti+1)+" of "+TASKS.length+": ")+T.t;
+say("");setProg();speak(T.t)}
+function next(){
+var T=TASKS[ti];win();score++;setProg();clearHints();
+var wasClose=T.ev==="close";
+ti++;
+if(ti>=TASKS.length){finish();return}
+say("Great job!");
+if(wasClose){setTimeout(function(){respawn();say("A new window! Let's keep going.");setTimeout(startTask,1300)},1300)}
+else{setTimeout(startTask,1300)}}
+function evt(name){
+if(!started)return;
+var T=TASKS[ti];
+if(T&&T.ev===name){
+if(T.test&&!T.test()){say(T.fail);tone(260,0.2);speak(T.fail);return}
+next();return}
+if(name==="min"){say("Peek-a-boo! It is sleeping. It will wake up.");setTimeout(function(){if(state==="min"){state=prevState;apply()}},1500)}
+else if(name==="close"){say("Oops! It said goodbye. Here it is again!");tone(220,0.2);setTimeout(respawn,1500)}
+else if(name==="max"){say("Giant! Let's make it normal again.");setTimeout(function(){if(state==="max"){state="normal";apply()}},1500)}}
+$("bmin").addEventListener("click",function(){if(state==="min"||state==="closed")return;prevState=state;state="min";apply();evt("min")});
+$("ticon").addEventListener("click",function(){if(state==="min"){state=prevState;apply();evt("wake")}});
+$("bmax").addEventListener("click",function(){if(state==="normal"){state="max";apply();evt("max")}else if(state==="max"){state="normal";apply();evt("unmax")}});
+$("bx").addEventListener("click",function(){if(state==="closed")return;state="closed";apply();evt("close")});
+["bmin","bmax","bx"].forEach(function(id){$(id).addEventListener("pointerdown",function(e){e.stopPropagation()})});
+function deskSize(){var d=$("desk").getBoundingClientRect();return{w:d.width,h:d.height}}
+(function(){
+var tb=$("tb"),sx=0,sy=0,l0=0,t0=0,on=false;
+tb.addEventListener("pointerdown",function(e){if(state!=="normal")return;on=true;tb.setPointerCapture(e.pointerId);tb.classList.add("grab");sx=e.clientX;sy=e.clientY;l0=rect.l;t0=rect.t;tone(520,0.05)});
+tb.addEventListener("pointermove",function(e){if(!on)return;var s=deskSize();
+rect.l=Math.max(0,Math.min(1-rect.w,l0+(e.clientX-sx)/s.w));
+rect.t=Math.max(0,Math.min(1-BAR-rect.h,t0+(e.clientY-sy)/s.h));apply()});
+function end(){if(!on)return;on=false;tb.classList.remove("grab");evt("drag")}
+tb.addEventListener("pointerup",end);tb.addEventListener("pointercancel",end);
+var rs=$("rs"),rx=0,ry=0,w0=0,h0=0,ron=false;
+rs.addEventListener("pointerdown",function(e){if(state!=="normal")return;e.stopPropagation();ron=true;rs.setPointerCapture(e.pointerId);rx=e.clientX;ry=e.clientY;w0=rect.w;h0=rect.h;tone(520,0.05)});
+rs.addEventListener("pointermove",function(e){if(!ron)return;var s=deskSize();
+rect.w=Math.max(0.2,Math.min(1-rect.l,w0+(e.clientX-rx)/s.w));
+rect.h=Math.max(0.24,Math.min(1-BAR-rect.t,h0+(e.clientY-ry)/s.h));apply()});
+function rend(){if(!ron)return;ron=false;evt("resize")}
+rs.addEventListener("pointerup",rend);rs.addEventListener("pointercancel",rend)})();
+function overlay(h,p,b,fn){$("oh").textContent=h;$("op").textContent=p;$("ob").textContent=b;$("ov").style.display="flex";ovFn=fn;speak(h+". "+p)}
+$("ob").addEventListener("click",function(){$("ov").style.display="none";var f=ovFn;ovFn=null;tone(520,0.08);if(f)f()});
+function begin(){respawn();ti=0;score=0;started=true;setProg();startTask()}
+function finish(){started=false;clearHints();$("hint").textContent="You did it!";setProg();say("");tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);
+overlay("You are a Window Wizard!","You can minimize, maximize, close, move, and resize a window. Show your grown-up!","Play again",begin)}
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak(started&&TASKS[ti]?TASKS[ti].t:$("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+apply();
+overlay("Welcome, Window Wizard!","This is a pretend computer screen. Follow the missions. Use the buttons and move the window. Press Start!","Start",begin);
+</script>
+</body>
+</html>
