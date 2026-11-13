@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Folder Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:14px 14px 28px;display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(26px,4.6vw,44px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:700;max-width:620px}
+#side{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#prog{font-size:24px;font-weight:800}
+.vs{display:flex;gap:6px;align-items:center;justify-content:center}
+.vs span{font-size:18px;font-weight:700}
+button.v{font-size:18px;padding:5px 14px;background:var(--panel);color:var(--fg);border:3px solid var(--fg);box-shadow:none}
+button.v.on{background:var(--te);color:#1F2A44}
+#win{position:relative;width:100%;max-width:960px;margin:0 auto;aspect-ratio:16/9;background:#fff;border:4px solid #1F2A44;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;color:#1F2A44;user-select:none;-webkit-user-select:none}
+#wtb{flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 10px;height:clamp(28px,5vw,40px);background:#E4DED2;border-bottom:3px solid #1F2A44;font-size:clamp(13px,2.2vw,20px);font-weight:800}
+#tb{flex:none;background:#EEF1F6;border-bottom:3px solid #1F2A44;padding:6px 8px;position:relative}
+.tabs{display:flex;gap:6px;margin-bottom:4px;font-size:clamp(11px,1.9vw,16px);font-weight:600}
+.tabs span{padding:1px 10px;border-bottom:4px solid transparent}
+.tabs span.on{font-weight:800;border-bottom-color:#FF8A3D}
+.trow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tbn{font:inherit;font-size:clamp(12px,2.2vw,19px);font-weight:800;padding:3px 10px;border:3px solid #1F2A44;border-radius:10px;background:#fff;color:#1F2A44;box-shadow:none;cursor:pointer;line-height:1.2}
+#path{flex:none;display:flex;align-items:center;gap:8px;padding:4px 10px;background:#fff;border-bottom:2px solid #E4DED2;font-size:clamp(12px,2.2vw,18px);font-weight:700}
+#back{display:none;font-size:clamp(11px,2vw,16px);padding:1px 10px}
+#area{position:relative;flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;padding:10px;background:linear-gradient(#DCEEFF,#BFE3FF);overflow:hidden}
+.cell{position:relative;width:clamp(66px,12.4%,104px);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border:3px solid transparent;border-radius:10px;touch-action:none}
+.cell .e{font-size:clamp(30px,6.4vw,54px);line-height:1}
+.cell .n{font-size:clamp(11px,1.9vw,16px);font-weight:800;text-align:center;line-height:1.1;background:rgba(255,255,255,.85);border-radius:6px;padding:1px 4px;overflow-wrap:anywhere}
+.cell.sel{background:rgba(255,210,63,.55);border-color:#FF8A3D}
+.cell.file{cursor:grab}
+.cell.fld{cursor:pointer}
+.cell.drag{z-index:40;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35));cursor:grabbing}
+.cell.lit{background:rgba(255,138,61,.45)}
+.cell.back{animation:shake .35s}
+.badge{position:absolute;top:-4px;right:2px;min-width:clamp(16px,3vw,24px);height:clamp(16px,3vw,24px);border-radius:50%;background:#2BB5A0;color:#fff;font-size:clamp(10px,1.8vw,15px);font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.nm{font:inherit;font-size:clamp(11px,1.9vw,16px);font-weight:800;width:100%;min-width:70px;padding:1px 4px;border:3px solid #FF8A3D;border-radius:6px;text-align:center;color:#1F2A44;background:#fff}
+.nm:focus{outline:3px solid #1F2A44}
+.hint{animation:pulse .7s infinite alternate;outline:4px solid #FF8A3D;outline-offset:2px}
+#area.hint{outline-offset:-8px;animation:none;outline-style:dashed}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+@keyframes shake{25%{translate:-8px}75%{translate:8px}}
+.menu{position:absolute;display:none;background:#fff;border:3px solid #1F2A44;border-radius:12px;overflow:hidden;z-index:60;min-width:clamp(110px,22vw,190px);box-shadow:0 8px 18px rgba(0,0,0,.3);color:#1F2A44}
+.mi{display:block;width:100%;text-align:left;padding:clamp(5px,1.2vw,10px) clamp(10px,1.6vw,14px);font:inherit;font-size:clamp(12px,2.2vw,18px);font-weight:700;background:#fff;color:#1F2A44;border:0;border-radius:0;box-shadow:none;cursor:pointer}
+.mi:hover{background:#FFD23F}
+.ir{display:flex;gap:4px;padding:6px;background:#F3F4F8;border-bottom:2px solid #E4DED2}
+.mi.ic{width:auto;font-size:clamp(16px,3vw,26px);padding:2px 8px;border-radius:8px;border:2px solid #1F2A44;text-align:center}
+.mi.hint{outline-offset:-3px}
+#dd{left:8px;top:100%;margin-top:2px}
+.ovl{position:absolute;inset:0;background:rgba(31,42,68,.6);display:none;align-items:center;justify-content:center;z-index:70}
+.pw,.sw{background:#fff;border:4px solid #1F2A44;border-radius:14px;overflow:hidden;width:min(70%,520px);position:relative}
+.ptb{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#E4DED2;border-bottom:3px solid #1F2A44;font-weight:800;font-size:clamp(13px,2.2vw,20px)}
+.pbody{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px;font-size:clamp(40px,10vw,90px);line-height:1}
+.pbody p{margin:0;font-size:clamp(14px,2.4vw,22px);font-weight:700}
+.wb{font:inherit;font-weight:800;font-size:clamp(12px,2vw,18px);border:3px solid #1F2A44;border-radius:8px;background:#fff;color:#1F2A44;padding:1px 10px;box-shadow:none;cursor:pointer}
+.wb.x{background:#E63946;color:#fff}
+.pm{right:8px;left:auto;top:clamp(30px,5vw,44px)}
+.sw{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.sw h3{margin:0;font-size:clamp(18px,3vw,26px);font-weight:800}
+.sw p{margin:0;font-size:clamp(13px,2.2vw,18px);font-weight:700}
+#sn{font:inherit;font-size:clamp(14px,2.4vw,20px);font-weight:700;padding:4px 10px;border:3px solid #1F2A44;border-radius:8px;color:#1F2A44;background:#fff}
+#sf{display:flex;flex-wrap:wrap;gap:6px}
+#sf button{font-size:clamp(12px,2.2vw,18px);padding:4px 12px;background:#fff;color:#1F2A44;border:3px solid #1F2A44;box-shadow:none}
+#sf button.on{background:#FFD23F}
+.sbar{display:flex;gap:8px}
+#ov{position:absolute;inset:0;background:rgba(31,42,68,.92);color:#FFF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center;z-index:95}
+#ov h2{margin:0;font-size:clamp(24px,5vw,46px);font-weight:800;line-height:1.1}
+#ov p{margin:0;max-width:600px;font-size:clamp(15px,2.7vw,25px);font-weight:500;line-height:1.3}
+#msg{min-height:40px;font-size:clamp(18px,3.4vw,30px);font-weight:800;text-align:center}
+button{font:inherit;font-size:24px;font-weight:800;padding:9px 26px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:19px;padding:5px 14px;background:var(--ye)}
+#ob{font-size:28px;padding:12px 34px;background:var(--ye)}
+#pretend{align-self:center;display:flex;gap:8px;align-items:center;background:var(--panel);color:var(--fg);border:3px dashed var(--fg);box-shadow:none;font-size:clamp(16px,2.6vw,22px)}
+#pretend b{background:#fff;color:#1F2A44;border:3px solid #1F2A44;border-radius:8px;padding:0 8px}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+.note{margin:0;text-align:center;font-size:18px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.hint,.cell.back{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="90" height="68" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Folder Master</h1><p id="hint">Get ready!</p></div>
+<div id="side"><span id="prog"></span><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button></div>
+</header>
+<div class="vs"><span>Pretend I use:</span><button id="v11" class="v on">Windows 11</button><button id="v10" class="v">Windows 10</button></div>
+<div id="win">
+<div id="wtb"><span>📁 File Explorer</span><span>_ □ ✕</span></div>
+<div id="tb"></div>
+<div id="path"><button id="back" class="tbn">⬅ Back</button><span id="pathtxt">Desktop</span></div>
+<div id="area" aria-label="Files and folders"></div>
+<div id="menu" class="menu"></div>
+<div id="sub" class="menu"></div>
+<div id="paint" class="ovl"><div class="pw"><div class="ptb"><span>🖌️ Paint</span><span><button id="pfile" class="wb">File ▾</button> <button id="pclose" class="wb x">X</button></span></div><div class="pbody">🌈<p>My picture</p></div><div id="pm" class="menu pm"><button id="psave" class="mi">Save</button></div></div></div>
+<div id="sdlg" class="ovl"><div class="sw"><h3>Save as</h3><input id="sn" type="text" maxlength="12" value="Picture" aria-label="File name"><p>Choose a folder:</p><div id="sf"></div><div class="sbar"><button id="sv">Save</button><button id="sc" class="small">Cancel</button></div></div></div>
+<div id="ov"><h2 id="oh"></h2><p id="op"></p><button id="ob"></button></div>
+</div>
+<div id="msg" role="status" aria-live="polite"></div>
+<button id="pretend" class="small" aria-label="Pretend Ctrl Shift N">⌨️ Secret power: <b>Ctrl</b> + <b>Shift</b> + <b>N</b> (press here)</button>
+<p class="note">A web page cannot use the real Ctrl + Shift + N, because the browser keeps it. So press the button. On a real Windows computer the real keys work!</p>
+</main>
+<script>
+var $=function(id){return document.getElementById(id)};
+function mk(tag,cls,txt){var d=document.createElement(tag);if(cls)d.className=cls;if(txt!==undefined)d.textContent=txt;return d}
+var ver="11",root={k:"root",n:"Desktop",items:[]},loc=root,sel=null,clip=null,editing=null,ti=0,started=false,score=0,ac=null,voiceOn=true;
+var mOpen=false,sOpen=false,ddOpen=false,paintOpen=false,saveOpen=false,saveFolder=null,menuIt=null;
+function mkItem(k,n,e){return{k:k,n:n,e:e,items:k==="folder"?[]:null}}
+var TASKS=[
+{ph:"Make a folder, way 1",t:function(){return"Right-click a blank space. Click New. Click Folder."},ev:"mk_ctx"},
+{ph:"Make a folder, way 2",t:function(){return ver==="11"?"Click the + New button at the top. Click Folder.":"Click the New folder button at the top."},ev:"mk_btn"},
+{ph:"Make a folder, way 3",t:function(){return"Secret power! Press the Ctrl + Shift + N button."},ev:"mk_key"},
+{ph:"Rename, way 1",t:function(){return"Right-click a folder. Click Rename. Type Art. Press Enter."},ev:"rn_ctx",rn:"Art"},
+{ph:"Rename, way 2",t:function(){return"Click another folder once. Press F2. Type Fun. Press Enter."},ev:"rn_f2",rn:"Fun"},
+{ph:"Rename, way 3",t:function(){return"Click the last folder once. Click Rename at the top. Type Pets. Press Enter."},ev:"rn_btn",rn:"Pets"},
+{ph:"Move a file, way 1",t:function(){return"Oh no! Files appeared. Drag the Drawing into the Art folder."},ev:"mv_drag",prep:spawnFiles,chk:function(d){return d.file==="Drawing"&&d.folder==="Art"}},
+{ph:"Move a file, way 2",t:function(){return"Cut and paste. Right-click the Photo. Click Cut. Then right-click the Art folder. Click Paste."},ev:"mv_cut",chk:function(d){return d.file==="Photo"&&d.folder==="Art"}},
+{ph:"Move a file, way 3",t:function(){return"Copy and paste. Right-click the Puzzle. Click Copy. Then right-click the Fun folder. Click Paste. The Puzzle stays, and a twin goes in!"},ev:"mv_copy",chk:function(d){return d.file==="Puzzle"&&d.folder==="Fun"}},
+{ph:"Move a file, way 4",t:function(){return"Save into a folder. Double-click Paint. Click File, then Save. Pick the Pets folder. Click Save."},ev:"mv_save"}
+];
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function q(s){return[].slice.call(document.querySelectorAll(s))}
+function cellOf(n){return q("#area .cell").filter(function(c){return c.dataset.n===n})}
+function unnamed(){return q("#area .cell").filter(function(c){return c.dataset.k==="folder"&&c.dataset.n.indexOf("New folder")===0}).slice(0,1)}
+/* hints */
+var HINTS=[
+function(){return mOpen?(sOpen?q("#sub [data-k=folder]"):q("#menu [data-k=new]")):q("#area")},
+function(){return ver==="11"&&ddOpen?q("#dd [data-k=folder]"):q("#tbNew")},
+function(){return q("#pretend")},
+function(){return mOpen?q("#menu [data-k=rename]"):unnamed()},
+function(){return sel&&sel.k==="folder"?[]:unnamed()},
+function(){return sel&&sel.k==="folder"?q("#tbRename"):unnamed()},
+function(){return cellOf("Drawing").concat(cellOf("Art"))},
+function(){return clip?(mOpen?q("#menu [data-k=paste]"):cellOf("Art")):(mOpen?q("#menu [data-k=cut]"):cellOf("Photo"))},
+function(){return clip?(mOpen?q("#menu [data-k=paste]"):cellOf("Fun")):(mOpen?q("#menu [data-k=copy]"):cellOf("Puzzle"))},
+function(){return paintOpen?(saveOpen?(saveFolder==="Pets"?q("#sv"):q("#sf [data-f=Pets]")):($("pm").style.display==="block"?q("#psave"):q("#pfile"))):cellOf("Paint")}
+];
+function applyHints(){
+q(".hint").forEach(function(e){e.classList.remove("hint")});
+if(!started||!TASKS[ti])return;
+(HINTS[ti]()||[]).forEach(function(e){e.classList.add("hint")})}
+/* render */
+function render(){renderPath();renderArea();applyHints()}
+function renderPath(){$("pathtxt").textContent=loc===root?"Desktop":"Desktop  ›  "+loc.n;$("back").style.display=loc===root?"none":"inline-block"}
+function renderTb(){
+var t=$("tb");t.innerHTML="";
+var r=mk("div","trow");
+function B(id,txt,label){var b=mk("button","tbn",txt);b.id=id;b.setAttribute("aria-label",label);b.title=label;r.appendChild(b);return b}
+if(ver==="11"){
+var nb=B("tbNew","+ New ▾","New");
+B("tbCut","✂️","Cut");B("tbCopy","⧉","Copy");B("tbPaste","📋","Paste");B("tbRename","✏️","Rename");B("tbDel","🗑️","Delete");
+t.appendChild(r);
+var dd=mk("div","menu");dd.id="dd";
+[["folder","📁 Folder"],["text","📝 Text Document"]].forEach(function(p){var b=mk("button","mi",p[1]);b.dataset.k=p[0];
+b.addEventListener("click",function(e){e.stopPropagation();closeMenus();if(p[0]==="folder"){makeFolder("btn")}else{addNote()}});dd.appendChild(b)});
+t.appendChild(dd);
+nb.addEventListener("click",function(e){e.stopPropagation();var was=ddOpen;closeMenus();if(!was){dd.style.display="block";ddOpen=true}applyHints()});
+}else{
+var tabs=mk("div","tabs");["File","Home","Share","View"].forEach(function(x){var s=mk("span",x==="Home"?"on":"",x);tabs.appendChild(s)});t.appendChild(tabs);
+var nb2=B("tbNew","📁 New folder","New folder");B("tbCut","✂ Cut","Cut");B("tbCopy","⧉ Copy","Copy");B("tbPaste","📋 Paste","Paste");B("tbRename","Rename","Rename");B("tbDel","🗑 Delete","Delete");
+t.appendChild(r);
+nb2.addEventListener("click",function(e){e.stopPropagation();closeMenus();makeFolder("btn")})}
+$("tbCut").addEventListener("click",function(e){e.stopPropagation();closeMenus();setClip("cut")});
+$("tbCopy").addEventListener("click",function(e){e.stopPropagation();closeMenus();setClip("copy")});
+$("tbPaste").addEventListener("click",function(e){e.stopPropagation();closeMenus();doPaste(sel&&sel.k==="folder"?sel:null)});
+$("tbRename").addEventListener("click",function(e){e.stopPropagation();closeMenus();if(sel){startRename(sel,"btn")}else{say("Click a folder first.");tone(220,0.15)}});
+$("tbDel").addEventListener("click",function(e){e.stopPropagation();closeMenus();delItem(sel)})}
+function renderArea(){
+var a=$("area");a.innerHTML="";
+loc.items.forEach(function(it){
+var c=mk("div","cell "+(it.k==="file"?"file":it.k==="folder"?"fld":"app")+(it===sel?" sel":""));c.dataset.n=it.n;c.dataset.k=it.k;c._it=it;
+c.appendChild(mk("span","e",it.e));
+if(editing&&editing.item===it){
+var inp=mk("input","nm");inp.type="text";inp.maxLength=12;inp.value=it.n;inp.autocomplete="off";inp.setAttribute("aria-label","Name");
+inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();commitEdit()}});
+inp.addEventListener("pointerdown",function(e){e.stopPropagation()});
+c.appendChild(inp);editing.input=inp;
+setTimeout(function(){if(editing&&editing.input===inp){inp.focus();inp.select()}},60)}
+else{c.appendChild(mk("span","n",it.n))}
+if(it.k==="folder"&&it.items.length){c.appendChild(mk("span","badge",String(it.items.length)))}
+wire(c,it);a.appendChild(c)})}
+function selMark(c){q("#area .cell").forEach(function(x){x.classList.remove("sel")});if(c)c.classList.add("sel")}
+function wire(c,it){
+var last=0;
+c.addEventListener("pointerdown",function(e){
+if(e.button===2)return;
+e.stopPropagation();closeMenus();
+if(editing&&editing.item!==it){if(!commitEdit())return}
+sel=it;selMark(c);applyHints();
+if(it.k==="file"&&e.button===0&&!(editing&&editing.item===it)){dragStart(c,it,e)}});
+c.addEventListener("pointerup",function(e){
+if(e.button===2)return;
+if(it.k==="file"||(editing&&editing.item===it))return;
+var n=Date.now();if(n-last<450){last=0;openIt(it)}else{last=n}});
+c.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();if(editing&&editing.item!==it){if(!commitEdit())return}sel=it;selMark(c);openMenu(e.clientX,e.clientY,it)})}
+$("area").addEventListener("contextmenu",function(e){if(e.target!==this)return;e.preventDefault();if(editing&&!commitEdit())return;sel=null;selMark(null);openMenu(e.clientX,e.clientY,null)});
+$("area").addEventListener("pointerdown",function(e){
+if(e.target!==this)return;
+closeMenus();
+if(editing){if(editing.src!=="mk"){say("Type the name, then press Enter.");if(editing.input)editing.input.focus();return}commitEdit()}
+sel=null;selMark(null);applyHints()});
+$("win").addEventListener("pointerdown",function(e){if(!e.target.closest(".menu")&&!e.target.closest("#tbNew")){if(mOpen||ddOpen){closeMenus();applyHints()}}});
+$("back").addEventListener("click",function(){if(editing&&!commitEdit())return;loc=root;sel=null;render()});
+/* open */
+function openIt(it){
+if(it.k==="folder"){if(editing&&!commitEdit())return;loc=it;sel=null;render()}
+else if(it.k==="app"){openPaint()}}
+/* menus */
+function closeMenus(){$("menu").style.display="none";$("sub").style.display="none";if($("dd"))$("dd").style.display="none";mOpen=false;sOpen=false;ddOpen=false}
+function place(el,cx,cy){
+var w=$("win").getBoundingClientRect();
+var x=Math.max(0,Math.min(cx-w.left,w.width*0.6)),y=Math.max(0,Math.min(cy-w.top,w.height*0.5));
+el.style.left=x+"px";el.style.top=y+"px";el.style.right="auto"}
+function mbtn(menu,k,txt,fn,cls){var b=mk("button","mi"+(cls?" "+cls:""),txt);b.dataset.k=k;b.setAttribute("aria-label",txt);b.addEventListener("click",function(e){e.stopPropagation();fn(b)});menu.appendChild(b);return b}
+function openMenu(cx,cy,it){
+closeMenus();menuIt=it;var m=$("menu");m.innerHTML="";
+if(!it){
+mbtn(m,"view","View",function(){say("Not that one. Click New.");tone(220,0.15)});
+mbtn(m,"sort","Sort by",function(){say("Not that one. Click New.");tone(220,0.15)});
+mbtn(m,"refresh","Refresh",function(){say("Not that one. Click New.");tone(220,0.15)});
+mbtn(m,"new","New  ▸",function(b){showSub(b)})}
+else{
+var canPaste=it.k==="folder"&&clip;
+if(ver==="11"){
+var row=mk("div","ir");
+mbtn(row,"cut","✂️",function(){closeMenus();setClip("cut")},"ic");
+mbtn(row,"copy","⧉",function(){closeMenus();setClip("copy")},"ic");
+if(canPaste)mbtn(row,"paste","📋",function(){closeMenus();doPaste(it)},"ic");
+mbtn(row,"rename","✏️",function(){closeMenus();startRename(it,"ctx")},"ic");
+mbtn(row,"delete","🗑️",function(){closeMenus();delItem(it)},"ic");
+m.appendChild(row);
+mbtn(m,"open","Open",function(){closeMenus();openIt(it)})}
+else{
+mbtn(m,"open","Open",function(){closeMenus();openIt(it)});
+mbtn(m,"cut","Cut",function(){closeMenus();setClip("cut")});
+mbtn(m,"copy","Copy",function(){closeMenus();setClip("copy")});
+if(canPaste)mbtn(m,"paste","Paste",function(){closeMenus();doPaste(it)});
+mbtn(m,"rename","Rename",function(){closeMenus();startRename(it,"ctx")});
+mbtn(m,"delete","Delete",function(){closeMenus();delItem(it)})}}
+m.style.display="block";place(m,cx,cy);mOpen=true;applyHints()}
+function showSub(btn){
+var m=$("menu"),sb=$("sub");sb.innerHTML="";
+mbtn(sb,"folder","📁 Folder",function(){closeMenus();makeFolder("ctx")});
+mbtn(sb,"shortcut","Shortcut",function(){say("Not that one. Click Folder.");tone(220,0.15)});
+mbtn(sb,"text","📝 Text Document",function(){closeMenus();addNote()});
+sb.style.display="block";sb.style.left=(m.offsetLeft+m.offsetWidth-4)+"px";sb.style.top=(m.offsetTop+btn.offsetTop)+"px";sOpen=true;applyHints()}
+/* actions */
+function uniqueName(base){var n=base,i=2,names=loc.items.map(function(x){return x.n});while(names.indexOf(n)>-1){n=base+" ("+i+")";i++}return n}
+function addNote(){loc.items.push(mkItem("file",uniqueName("New note"),"📝"));render();say("A new note file!")}
+function makeFolder(src){
+if(editing&&!commitEdit())return;
+var it=mkItem("folder",uniqueName("New folder"),"📁");loc.items.push(it);sel=it;editing={item:it,src:"mk"};
+render();say("A yellow folder appeared! Type a name, or press Enter.");tone(520,0.1);
+evt("mk_"+src)}
+function startRename(it,src){
+if(editing&&editing.item!==it&&!commitEdit())return;
+var T=started&&TASKS[ti];
+if(T&&T.rn&&it.k==="folder"&&it.n.indexOf("New folder")!==0){say("Pick a folder that is still called New folder.");tone(220,0.15);return}
+editing={item:it,src:src};sel=it;render()}
+function commitEdit(){
+if(!editing)return true;
+var ed=editing,v=ed.input?ed.input.value.replace(/[^A-Za-z0-9 ]/g,"").trim():ed.item.n;
+if(ed.src!=="mk"){
+var T=started&&TASKS[ti];
+if(T&&T.rn&&T.ev==="rn_"+ed.src&&v.toLowerCase()!==T.rn.toLowerCase()){
+var m="Let's type "+T.rn+". Type "+T.rn.split("").join(", ")+".";say(m);speak(m);tone(220,0.2);if(ed.input){ed.input.value="";ed.input.focus()}return false}}
+if(v)ed.item.n=v;
+editing=null;render();
+if(ed.src!=="mk"){say("Nice name!");evt("rn_"+ed.src,{name:ed.item.n})}
+return true}
+function setClip(mode){
+if(!sel||sel.k==="app"){say("Click a file or folder first.");tone(220,0.15);return}
+clip={item:sel,mode:mode,from:loc};
+var m=(mode==="cut"?"Cut! ":"Copied! ")+"Now right-click the folder and click Paste.";say(m);speak(m);applyHints()}
+function doPaste(target){
+if(!clip){say("Nothing to paste yet. Cut or copy first.");tone(220,0.15);return}
+var dest=target&&target.k==="folder"?target:loc;
+if(clip.item===dest){say("A folder cannot go inside itself!");return}
+var file=clip.item,mode=clip.mode;
+if(mode==="cut"){var i=clip.from.items.indexOf(file);if(i>-1)clip.from.items.splice(i,1);dest.items.push(file)}
+else{dest.items.push({k:file.k,n:file.n,e:file.e,items:file.items?[]:null})}
+clip=null;render();
+var m=mode==="cut"?"The "+file.n+" moved into "+dest.n+"!":"A twin of the "+file.n+" went into "+dest.n+". The first one stays!";
+say(m);speak(m);win();
+evt(mode==="cut"?"mv_cut":"mv_copy",{file:file.n,folder:dest.n})}
+function delItem(it){
+if(!it){say("Click something first.");return}
+var i=loc.items.indexOf(it);if(i>-1){loc.items.splice(i,1)}sel=null;editing=null;render();say("Deleted.")}
+/* drag and drop */
+function folderUnder(cx,cy,self){
+var els=document.elementsFromPoint(cx,cy);
+for(var i=0;i<els.length;i++){var c=els[i].closest?els[i].closest(".cell"):null;if(c&&c!==self&&c.dataset.k==="folder")return c}
+return null}
+function dragStart(c,it,e){
+var sx=e.clientX,sy=e.clientY,over=null,moved=false;
+c.setPointerCapture(e.pointerId);c.classList.add("drag");tone(520,0.05);
+function mv(ev){moved=true;c.style.transform="translate("+(ev.clientX-sx)+"px,"+(ev.clientY-sy)+"px)";
+var f=folderUnder(ev.clientX,ev.clientY,c);if(over&&over!==f)over.classList.remove("lit");over=f;if(f)f.classList.add("lit")}
+function up(ev){
+c.removeEventListener("pointermove",mv);c.removeEventListener("pointerup",up);c.removeEventListener("pointercancel",up);
+c.classList.remove("drag");
+var f=folderUnder(ev.clientX,ev.clientY,c);if(over){over.classList.remove("lit");over=null}
+if(!moved||!f){c.style.transform="";return}
+var fi=f._it,T=started&&TASKS[ti];
+if(T&&T.ev!=="mv_drag"){c.style.transform="";c.classList.add("back");say("We are practicing a different way now. Check the mission!");tone(220,0.2);return}
+if(T&&T.chk&&!T.chk({file:it.n,folder:fi.n})){c.style.transform="";c.classList.add("back");var m0="Hmm. Drag the Drawing into the Art folder.";say(m0);speak(m0);tone(220,0.2);return}
+var i=loc.items.indexOf(it);if(i>-1)loc.items.splice(i,1);fi.items.push(it);
+render();var m="The "+it.n+" is in "+fi.n+"!";say(m);speak(m);win();
+evt("mv_drag",{file:it.n,folder:fi.n})}
+c.addEventListener("pointermove",mv);c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up)}
+/* paint */
+function openPaint(){paintOpen=true;$("paint").style.display="flex";$("pm").style.display="none";applyHints()}
+function closePaint(){paintOpen=false;saveOpen=false;$("paint").style.display="none";$("sdlg").style.display="none";$("pm").style.display="none";applyHints()}
+$("pfile").addEventListener("click",function(e){e.stopPropagation();var m=$("pm");m.style.display=m.style.display==="block"?"none":"block";applyHints()});
+$("pclose").addEventListener("click",function(e){e.stopPropagation();closePaint()});
+$("psave").addEventListener("click",function(e){e.stopPropagation();$("pm").style.display="none";openSave()});
+function openSave(){
+saveOpen=true;saveFolder=null;$("sdlg").style.display="flex";$("sn").value="Picture";
+var f=$("sf");f.innerHTML="";
+["Desktop"].concat(root.items.filter(function(x){return x.k==="folder"}).map(function(x){return x.n})).forEach(function(n){
+var b=mk("button","",(n==="Desktop"?"🖥️ ":"📁 ")+n);b.dataset.f=n;
+b.addEventListener("click",function(){saveFolder=n;[].forEach.call(f.children,function(x){x.classList.remove("on")});b.classList.add("on");applyHints()});f.appendChild(b)});
+applyHints()}
+$("sc").addEventListener("click",function(){saveOpen=false;$("sdlg").style.display="none";applyHints()});
+$("sv").addEventListener("click",function(){
+if(!saveFolder){say("Choose a folder first.");tone(220,0.15);return}
+if(saveFolder!=="Pets"){var m0="Pick the Pets folder for this picture.";say(m0);speak(m0);tone(220,0.2);return}
+var nm=$("sn").value.replace(/[^A-Za-z0-9 ]/g,"").trim()||"Picture";
+var pets=root.items.filter(function(x){return x.n==="Pets"})[0];
+if(pets)pets.items.push(mkItem("file",nm,"🖼️"));
+closePaint();render();var m="Saved! Your picture is in the Pets folder.";say(m);speak(m);win();
+evt("mv_save",{folder:"Pets"})});
+/* flow */
+function spawnFiles(){
+if(root.items.some(function(x){return x.n==="Drawing"}))return;
+loc=root;sel=null;editing=null;
+[["file","Drawing","🎨"],["file","Photo","🖼️"],["file","Puzzle","🧩"],["app","Paint","🖌️"]].forEach(function(a){root.items.push(mkItem(a[0],a[1],a[2]))});render()}
+function setProg(){$("prog").textContent="⭐ "+score+"/"+TASKS.length}
+function startTask(){
+var T=TASKS[ti];if(T.prep)T.prep();
+$("hint").textContent="Mission "+(ti+1)+" of "+TASKS.length+" · "+T.ph+": "+T.t();
+say("");setProg();speak(T.t());applyHints()}
+function next(){
+win();score++;setProg();ti++;applyHints();
+if(ti>=TASKS.length){finish();return}
+say("Great job!");clearTimeout(window._st);window._st=setTimeout(startTask,1500)}
+function evt(name,data){
+if(!started)return;
+var T=TASKS[ti];if(!T)return;
+if(T.ev===name&&(!T.chk||T.chk(data||{}))){next();return}
+if(T.ev.slice(0,2)===name.slice(0,2)&&T.ev!==name){say("That worked! But let's practice the other way this time.")}}
+$("pretend").addEventListener("click",function(){closeMenus();makeFolder("key")});
+document.addEventListener("keydown",function(e){
+var tg=e.target;if(tg&&tg.tagName==="INPUT")return;
+var k=e.key;
+if(k==="F2"&&sel){e.preventDefault();startRename(sel,"f2");return}
+if((e.ctrlKey||e.metaKey)&&!e.shiftKey){var l=k.toLowerCase();
+if(l==="x"||l==="c"){if(sel){e.preventDefault();setClip(l==="x"?"cut":"copy")}}
+else if(l==="v"){e.preventDefault();doPaste(sel&&sel.k==="folder"?sel:null)}}});
+function overlay(h,p,b,fn){$("oh").textContent=h;$("op").textContent=p;$("ob").textContent=b;$("ov").style.display="flex";ovFn=fn;speak(h+". "+p)}
+var ovFn=null;
+$("ob").addEventListener("click",function(){$("ov").style.display="none";var f=ovFn;ovFn=null;tone(520,0.08);if(f)f()});
+function begin(){root.items=[];loc=root;sel=null;clip=null;editing=null;closeMenus();closePaint();ti=0;score=0;started=true;renderTb();render();setProg();startTask()}
+function finish(){started=false;applyHints();$("hint").textContent="You are a Folder Master!";setProg();say("");tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);
+overlay("You are a Folder Master!","You made folders three ways, renamed them three ways, and moved files four ways. Great job!","Play again",begin)}
+function setVer(v){ver=v;$("v11").classList.toggle("on",v==="11");$("v10").classList.toggle("on",v==="10");closeMenus();renderTb();render();if(started){$("hint").textContent="Mission "+(ti+1)+" of "+TASKS.length+" · "+TASKS[ti].ph+": "+TASKS[ti].t()}}
+$("v11").addEventListener("click",function(){setVer("11")});
+$("v10").addEventListener("click",function(){setVer("10")});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak(started&&TASKS[ti]?TASKS[ti].t():$("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+renderTb();render();
+overlay("Welcome, Folder Master!","This is a pretend File Explorer. You will make folders, rename them, and move files in lots of different ways. Press Start!","Start",begin);
+</script>
+</body>
+</html>
