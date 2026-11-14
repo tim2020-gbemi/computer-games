@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Story Shelf</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:14px 14px 28px;display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(26px,4.6vw,44px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:700;max-width:640px}
+#side{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#prog{font-size:24px;font-weight:800}
+#win{position:relative;width:100%;max-width:960px;margin:0 auto;aspect-ratio:16/9;background:#fff;border:4px solid #1F2A44;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;color:#1F2A44;user-select:none;-webkit-user-select:none}
+#wtb{flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 10px;height:clamp(28px,5vw,40px);background:#E4DED2;border-bottom:3px solid #1F2A44;font-size:clamp(13px,2.2vw,20px);font-weight:800}
+#body{flex:1;min-height:0;display:flex}
+#nav{flex:none;width:24%;background:#EEF1F6;border-right:3px solid #1F2A44;padding:8px;display:flex;flex-direction:column;gap:6px}
+.nv{font:inherit;font-size:clamp(12px,2.2vw,19px);font-weight:800;text-align:left;padding:5px 10px;border:3px solid transparent;border-radius:10px;background:transparent;color:#1F2A44;box-shadow:none;cursor:pointer}
+.nv.on{background:#FFD23F;border-color:#1F2A44}
+.nv.lit{background:#FF8A3D}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#path{flex:none;padding:5px 12px;background:#fff;border-bottom:2px solid #E4DED2;font-size:clamp(12px,2.2vw,18px);font-weight:700}
+#area{position:relative;flex:1;min-height:0;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;padding:12px;background:linear-gradient(#DCEEFF,#BFE3FF);overflow:hidden}
+.cell{position:relative;width:clamp(70px,22%,108px);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border:3px solid transparent;border-radius:10px;touch-action:none}
+.cell .e{font-size:clamp(30px,6.4vw,54px);line-height:1}
+.cell .n{font-size:clamp(11px,1.9vw,16px);font-weight:800;text-align:center;line-height:1.1;background:rgba(255,255,255,.85);border-radius:6px;padding:1px 4px;overflow-wrap:anywhere}
+.cell.sel{background:rgba(255,210,63,.55);border-color:#FF8A3D}
+.cell.file{cursor:grab}
+.cell.fld,.cell.app{cursor:pointer}
+.cell.drag{z-index:40;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35));cursor:grabbing}
+.cell.lit{background:rgba(255,138,61,.45)}
+.badge{position:absolute;top:-4px;right:2px;min-width:clamp(16px,3vw,24px);height:clamp(16px,3vw,24px);border-radius:50%;background:#2BB5A0;color:#fff;font-size:clamp(10px,1.8vw,15px);font-weight:800;display:grid;place-items:center;border:2px solid #fff}
+.nm{font:inherit;font-size:clamp(11px,1.9vw,16px);font-weight:800;width:100%;min-width:70px;padding:1px 4px;border:3px solid #FF8A3D;border-radius:6px;text-align:center;color:#1F2A44;background:#fff}
+.nm:focus{outline:3px solid #1F2A44}
+.hint{animation:pulse .7s infinite alternate;outline:4px solid #FF8A3D;outline-offset:2px}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+.ovl{position:absolute;inset:0;background:rgba(31,42,68,.55);display:none;align-items:center;justify-content:center;z-index:70}
+.npw,.sw{background:#fff;border:4px solid #1F2A44;border-radius:14px;width:min(78%,620px);position:relative;display:flex;flex-direction:column}
+.ntb{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:#E4DED2;border-bottom:3px solid #1F2A44;font-weight:800;font-size:clamp(13px,2.2vw,20px);border-radius:10px 10px 0 0}
+.mbar{display:flex;gap:6px;padding:4px 8px;background:#F3F4F8;border-bottom:2px solid #E4DED2;position:relative}
+.wb{font:inherit;font-weight:800;font-size:clamp(12px,2vw,18px);border:3px solid #1F2A44;border-radius:8px;background:#fff;color:#1F2A44;padding:1px 10px;box-shadow:none;cursor:pointer}
+.wb.x{background:#E63946;color:#fff}
+#fm{position:absolute;left:8px;top:100%;display:none;background:#fff;border:3px solid #1F2A44;border-radius:10px;overflow:hidden;z-index:5;min-width:120px}
+#fm button{display:block;width:100%;text-align:left;font:inherit;font-weight:700;font-size:clamp(13px,2.2vw,18px);padding:6px 14px;border:0;border-radius:0;background:#fff;color:#1F2A44;box-shadow:none;cursor:pointer}
+#fm button:hover{background:#FFD23F}
+#ta{font:inherit;font-size:clamp(18px,3.4vw,30px);font-weight:600;line-height:1.3;padding:10px 14px;border:0;resize:none;height:clamp(90px,26vw,200px);color:#1F2A44;background:#fff;outline:none;user-select:text;-webkit-user-select:text}
+#ta.hint{outline-offset:-6px}
+#chk{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px;background:#F3F4F8;border-top:2px solid #E4DED2;border-radius:0 0 10px 10px}
+.ck{font-size:clamp(11px,2vw,17px);font-weight:800;padding:2px 10px;border-radius:999px;background:#fff;border:3px solid #E4DED2;color:#5A5F6B}
+.ck.ok{background:#7FD6B8;border-color:#2BB5A0;color:#1F2A44}
+.sw{padding:12px 16px;gap:8px}
+.sw h3{margin:0;font-size:clamp(18px,3vw,26px);font-weight:800}
+.sw p{margin:0;font-size:clamp(13px,2.2vw,18px);font-weight:700}
+#sn{font:inherit;font-size:clamp(14px,2.4vw,20px);font-weight:700;padding:4px 10px;border:3px solid #1F2A44;border-radius:8px;color:#1F2A44;background:#fff;user-select:text;-webkit-user-select:text}
+#sf{display:flex;flex-wrap:wrap;gap:6px}
+#sf button{font-size:clamp(12px,2.2vw,18px);padding:4px 12px;background:#fff;color:#1F2A44;border:3px solid #1F2A44;box-shadow:none}
+#sf button.on{background:#FFD23F}
+.sbar{display:flex;gap:8px}
+#ov{position:absolute;inset:0;background:rgba(31,42,68,.92);color:#FFF8EC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center;z-index:95}
+#ov h2{margin:0;font-size:clamp(24px,5vw,46px);font-weight:800;line-height:1.1}
+#ov p{margin:0;max-width:600px;font-size:clamp(15px,2.7vw,25px);font-weight:500;line-height:1.3}
+#msg{min-height:40px;font-size:clamp(18px,3.4vw,30px);font-weight:800;text-align:center}
+button{font:inherit;font-size:24px;font-weight:800;padding:9px 26px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:19px;padding:5px 14px;background:var(--ye)}
+#ob{font-size:28px;padding:12px 34px;background:var(--ye)}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+.note{margin:0;text-align:center;font-size:18px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.hint{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="90" height="68" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Story Shelf</h1><p id="hint">Get ready!</p></div>
+<div id="side"><span id="prog"></span><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button></div>
+</header>
+<div id="win">
+<div id="wtb"><span>📁 File Explorer</span><span>_ □ ✕</span></div>
+<div id="body">
+<div id="nav"></div>
+<div id="main"><div id="path">Desktop</div><div id="area" aria-label="Files and folders"></div></div>
+</div>
+<div id="np" class="ovl"><div class="npw">
+<div class="ntb"><span id="ntt">📝 Untitled - Notepad</span><button id="npx" class="wb x" aria-label="Close Notepad">X</button></div>
+<div class="mbar"><button id="fileBtn" class="wb">File</button><div id="fm"><button id="saveItem">💾 Save</button></div></div>
+<textarea id="ta" aria-label="Write here" placeholder="Type here..." spellcheck="false"></textarea>
+<div id="chk"><span class="ck" id="c1">🔠 Big letter</span><span class="ck" id="c2">␣ Gaps</span><span class="ck" id="c3">● Dot</span></div>
+</div></div>
+<div id="sd" class="ovl"><div class="sw"><h3>Save as</h3><p>Save in:</p><div id="sf"></div><p>File name:</p><input id="sn" type="text" maxlength="14" aria-label="File name" autocomplete="off"><div class="sbar"><button id="sv">Save</button><button id="sc" class="small">Cancel</button></div></div></div>
+<div id="ov"><h2 id="oh"></h2><p id="op"></p><button id="ob"></button></div>
+</div>
+<div id="msg" role="status" aria-live="polite"></div>
+<p class="note">Use your keyboard to type. Use the mouse to click and drag.</p>
+</main>
+<script>
+var $=function(id){return document.getElementById(id)};
+function mk(tag,cls,txt){var d=document.createElement(tag);if(cls)d.className=cls;if(txt!==undefined)d.textContent=txt;return d}
+var FS={Desktop:[],Stories:[],Fun:[]},loc="Desktop",sel=null,editing=null,doc=null,sfolder=null,fmOpen=false,sdOpen=false;
+var ti=0,started=false,score=0,ac=null,voiceOn=true,ovFn=null,oldName="";
+function resetFS(){FS={Desktop:[{k:"app",n:"Notepad",e:"📝"},{k:"folder",n:"Stories",e:"📁"},{k:"folder",n:"Fun",e:"📁"}],Stories:[],Fun:[]};loc="Desktop";sel=null;editing=null;doc=null}
+function sents(t){return t.split(".").filter(function(x){return x.trim().length>0}).length}
+function checks(t){var s=t.trim();return{big:/^[A-Z]/.test(s),gaps:/\S+\s+\S+/.test(s),dot:/\.\s*$/.test(s)}}
+var TASKS=[
+{ph:"Open Notepad",t:"Double-click Notepad to open it.",ev:"open_np",hl:function(){return cellOf("Notepad")}},
+{ph:"Type a sentence",t:"Type a sentence about an animal. Big letter first. Dot last.",ev:"typed",hl:function(){return doc?[$("ta")]:[]}},
+{ph:"Save it",t:"Click File. Then click Save.",ev:"menu_save",hl:function(){return fmOpen?[$("saveItem")]:[$("fileBtn")]}},
+{ph:"Pick the folder",t:"Click the Stories folder.",ev:"pick_folder",chk:function(d){return d.folder==="Stories"},hl:function(){return q("#sf [data-f=Stories]")}},
+{ph:"Name it",t:"Type a name for your file. Then click Save.",ev:"saved",chk:function(d){return d.folder==="Stories"},hl:function(){return $("sn").value.trim()?[$("sv")]:[$("sn")]}},
+{ph:"Close it",t:"Click the red X to close Notepad.",ev:"close_np",hl:function(){return[$("npx")]}},
+{ph:"Find it",t:"Open the Stories folder. Double-click it.",ev:"open_folder",chk:function(d){return d.name==="Stories"},prep:function(){loc="Desktop";render()},hl:function(){return cellOf("Stories").concat(q("#nav [data-loc=Stories]"))}},
+{ph:"Open your file",t:"Double-click your file to open it again.",ev:"open_file",hl:function(){return q("#area .cell.file")}},
+{ph:"Add more words",t:"Click at the end. Type a new sentence. Then click File, then Save.",ev:"saved2",hl:function(){return(doc&&sents($("ta").value)>=2)?(fmOpen?[$("saveItem")]:[$("fileBtn")]):[$("ta")]}},
+{ph:"Close it",t:"Click the red X to close Notepad.",ev:"close_np",hl:function(){return[$("npx")]}},
+{ph:"Rename it",t:"Click your file once. Press F2. Type a new name. Press Enter.",ev:"renamed",hl:function(){return q("#area .cell.file")}},
+{ph:"Move it",t:"Drag your file onto the Fun folder on the left.",ev:"moved",chk:function(d){return d.folder==="Fun"},hl:function(){return q("#area .cell.file").concat(q("#nav [data-loc=Fun]"))}}
+];
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function q(s){return[].slice.call(document.querySelectorAll(s))}
+function cellOf(n){return q("#area .cell").filter(function(c){return c.dataset.n===n})}
+function applyHints(){
+q(".hint").forEach(function(e){e.classList.remove("hint")});
+if(!started||!TASKS[ti])return;
+(TASKS[ti].hl()||[]).forEach(function(e){e.classList.add("hint")})}
+/* render */
+function render(){renderNav();renderPath();renderArea();applyHints()}
+function renderNav(){
+var n=$("nav");n.innerHTML="";
+[["Desktop","🖥️ Desktop"],["Stories","📁 Stories"],["Fun","📁 Fun"]].forEach(function(p){
+var b=mk("button","nv"+(loc===p[0]?" on":""),p[1]);b.dataset.loc=p[0];
+b.addEventListener("click",function(){if(editing&&!commitEdit())return;go(p[0])});n.appendChild(b)})}
+function go(name){
+var was=loc;loc=name;sel=null;render();
+if(name!=="Desktop"&&was!==name){evt("open_folder",{name:name})}}
+function renderPath(){$("path").textContent=loc==="Desktop"?"Desktop":"Desktop  ›  "+loc}
+function renderArea(){
+var a=$("area");a.innerHTML="";
+if(!FS[loc].length){var em=mk("div","",loc==="Desktop"?"":"It is empty!");em.style.cssText="margin:auto;font-size:clamp(16px,3vw,28px);font-weight:800";a.appendChild(em)}
+FS[loc].forEach(function(it){
+var c=mk("div","cell "+(it.k==="file"?"file":it.k==="folder"?"fld":"app")+(it===sel?" sel":""));c.dataset.n=it.n;c.dataset.k=it.k;c._it=it;
+c.appendChild(mk("span","e",it.e));
+if(editing&&editing.item===it){
+var inp=mk("input","nm");inp.type="text";inp.maxLength=14;inp.value=it.n;inp.autocomplete="off";inp.setAttribute("aria-label","Name");
+inp.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();commitEdit()}});
+inp.addEventListener("pointerdown",function(e){e.stopPropagation()});
+c.appendChild(inp);editing.input=inp;
+setTimeout(function(){if(editing&&editing.input===inp){inp.focus();inp.select()}},60)}
+else{c.appendChild(mk("span","n",it.n))}
+if(it.k==="folder"&&FS[it.n].length){c.appendChild(mk("span","badge",String(FS[it.n].length)))}
+wire(c,it);a.appendChild(c)})}
+function selMark(c){q("#area .cell").forEach(function(x){x.classList.remove("sel")});if(c)c.classList.add("sel")}
+function wire(c,it){
+var last=0;
+c.addEventListener("pointerdown",function(e){
+if(e.button===2)return;
+e.stopPropagation();
+if(editing&&editing.item!==it){if(!commitEdit())return}
+sel=it;selMark(c);applyHints();
+if(it.k==="file"&&!(editing&&editing.item===it)){dragStart(c,it,e)}});
+c.addEventListener("pointerup",function(e){
+if(e.button===2)return;
+if(editing&&editing.item===it)return;
+var n=Date.now();if(n-last<450){last=0;openIt(it)}else{last=n}})}
+$("area").addEventListener("pointerdown",function(e){
+if(e.target!==this)return;
+if(editing){say("Type the name, then press Enter.");if(editing.input)editing.input.focus();return}
+sel=null;selMark(null);applyHints()});
+function openIt(it){
+if(it.k==="folder"){if(editing&&!commitEdit())return;go(it.n)}
+else if(it.k==="app"){openNotepad(null)}
+else if(it.k==="file"){openNotepad(it)}}
+/* notepad */
+function updateChecks(){
+var t=$("ta").value,c=checks(t);
+$("c1").classList.toggle("ok",c.big);$("c2").classList.toggle("ok",c.gaps);$("c3").classList.toggle("ok",c.dot);
+return c}
+function openNotepad(file){
+if(doc)return;
+doc={file:file};$("np").style.display="flex";$("ta").value=file?file.text:"";
+$("ntt").textContent="📝 "+(file?file.n:"Untitled")+" - Notepad";
+updateChecks();closeFm();setTimeout(function(){$("ta").focus();if(file){var l=$("ta").value.length;try{$("ta").setSelectionRange(l,l)}catch(e){}}},80);
+applyHints();evt(file?"open_file":"open_np")}
+function closeNotepad(){
+if(!doc)return;
+doc=null;sdOpen=false;$("np").style.display="none";$("sd").style.display="none";closeFm();applyHints();evt("close_np")}
+$("npx").addEventListener("click",closeNotepad);
+function closeFm(){$("fm").style.display="none";fmOpen=false}
+$("fileBtn").addEventListener("click",function(e){e.stopPropagation();var was=fmOpen;closeFm();if(!was){$("fm").style.display="block";fmOpen=true}applyHints()});
+$("np").addEventListener("pointerdown",function(e){if(!e.target.closest("#fm")&&e.target.id!=="fileBtn"&&fmOpen){closeFm();applyHints()}});
+$("ta").addEventListener("input",function(){
+var c=updateChecks(),T=started&&TASKS[ti];
+if(T&&T.ev==="typed"){
+if(c.big&&c.gaps&&c.dot){evt("typed")}
+else if(c.dot){var m=!c.big?"Start with a big letter. Use Backspace, then hold Shift.":"A sentence needs two words with a gap.";say(m);speak(m)}}
+applyHints()});
+$("saveItem").addEventListener("click",function(e){
+e.stopPropagation();closeFm();
+if(!doc)return;
+if(doc.file){saveExisting()}
+else{
+var c=checks($("ta").value);
+if(!$("ta").value.trim()){say("Type a sentence first!");tone(220,0.15);return}
+openSave();evt("menu_save")}});
+function saveExisting(){
+doc.file.text=$("ta").value;
+var T=started&&TASKS[ti];
+if(T&&T.ev==="saved2"&&sents($("ta").value)<2){var m="Add a new sentence first. Big letter first, dot last.";say(m);speak(m);tone(220,0.2);return}
+say("Saved!");win();evt("saved2",{})}
+function openSave(){
+sdOpen=true;sfolder=null;$("sd").style.display="flex";$("sn").value="";
+var f=$("sf");f.innerHTML="";
+["Desktop","Stories","Fun"].forEach(function(n){
+var b=mk("button","",(n==="Desktop"?"🖥️ ":"📁 ")+n);b.dataset.f=n;
+b.addEventListener("click",function(){sfolder=n;[].forEach.call(f.children,function(x){x.classList.remove("on")});b.classList.add("on");applyHints();evt("pick_folder",{folder:n})});f.appendChild(b)});
+setTimeout(function(){applyHints()},0)}
+$("sn").addEventListener("input",function(){applyHints()});
+$("sc").addEventListener("click",function(){sdOpen=false;$("sd").style.display="none";applyHints()});
+$("sv").addEventListener("click",function(){
+if(!sfolder){say("Click a folder first.");tone(220,0.15);return}
+var nm=$("sn").value.replace(/[^A-Za-z0-9 ]/g,"").trim();
+if(!nm){var m0="Type a name for your file.";say(m0);speak(m0);tone(220,0.15);return}
+var T=started&&TASKS[ti];
+if(T&&T.ev==="saved"&&sfolder!=="Stories"){var m1="Pick the Stories folder for this one.";say(m1);speak(m1);tone(220,0.2);return}
+var f={k:"file",n:nm,e:"📝",text:$("ta").value};
+FS[sfolder].push(f);doc.file=f;sdOpen=false;$("sd").style.display="none";
+$("ntt").textContent="📝 "+nm+" - Notepad";
+var m="Saved in "+sfolder+"!";say(m);speak(m);win();render();
+evt("saved",{folder:sfolder})});
+/* rename + drag */
+function startRename(it){if(editing&&editing.item!==it&&!commitEdit())return;oldName=it.n;editing={item:it};sel=it;render()}
+function commitEdit(){
+if(!editing)return true;
+var ed=editing,v=ed.input?ed.input.value.replace(/[^A-Za-z0-9 ]/g,"").trim():ed.item.n;
+if(!v||v===oldName){var m="Type a new name. Then press Enter.";say(m);speak(m);tone(220,0.15);if(ed.input){ed.input.value="";ed.input.focus()}return false}
+ed.item.n=v;editing=null;render();say("Nice new name!");evt("renamed",{name:v});return true}
+document.addEventListener("keydown",function(e){
+var tg=e.target;if(tg&&(tg.tagName==="INPUT"||tg.tagName==="TEXTAREA"))return;
+if(e.key==="F2"&&sel&&sel.k==="file"){e.preventDefault();startRename(sel)}});
+function dropTarget(cx,cy,self){
+var els=document.elementsFromPoint(cx,cy);
+for(var i=0;i<els.length;i++){
+var el=els[i];if(!el.closest)continue;
+var nv=el.closest(".nv");if(nv)return{el:nv,loc:nv.dataset.loc};
+var c=el.closest(".cell");if(c&&c!==self&&c.dataset.k==="folder")return{el:c,loc:c._it.n}}
+return null}
+function dragStart(c,it,e){
+var sx=e.clientX,sy=e.clientY,over=null,moved=false;
+c.setPointerCapture(e.pointerId);c.classList.add("drag");tone(520,0.05);
+function mv(ev){moved=true;c.style.transform="translate("+(ev.clientX-sx)+"px,"+(ev.clientY-sy)+"px)";
+var f=dropTarget(ev.clientX,ev.clientY,c);if(over&&(!f||over!==f.el))over.classList.remove("lit");over=f?f.el:null;if(f)f.el.classList.add("lit")}
+function up(ev){
+c.removeEventListener("pointermove",mv);c.removeEventListener("pointerup",up);c.removeEventListener("pointercancel",up);
+c.classList.remove("drag");
+var f=dropTarget(ev.clientX,ev.clientY,c);if(over){over.classList.remove("lit");over=null}
+if(!moved||!f||f.loc===loc){c.style.transform="";return}
+var i=FS[loc].indexOf(it);if(i>-1)FS[loc].splice(i,1);FS[f.loc].push(it);sel=null;
+render();var m="Your file moved into "+f.loc+"!";say(m);speak(m);win();
+evt("moved",{folder:f.loc})}
+c.addEventListener("pointermove",mv);c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up)}
+/* flow */
+function overlay(h,p,b,fn){$("oh").textContent=h;$("op").textContent=p;$("ob").textContent=b;$("ov").style.display="flex";ovFn=fn;speak(h+". "+p)}
+$("ob").addEventListener("click",function(){$("ov").style.display="none";var f=ovFn;ovFn=null;tone(520,0.08);if(f)f()});
+function setProg(){$("prog").textContent="⭐ "+score+"/"+TASKS.length}
+function startTask(){
+var T=TASKS[ti];if(T.prep)T.prep();
+$("hint").textContent="Mission "+(ti+1)+" of "+TASKS.length+" · "+T.ph+": "+T.t;
+say("");setProg();speak(T.t);applyHints()}
+function next(){
+win();score++;setProg();ti++;applyHints();
+if(ti>=TASKS.length){finish();return}
+say("Great job!");clearTimeout(window._st);window._st=setTimeout(startTask,1500)}
+function evt(name,data){
+if(!started)return;
+var T=TASKS[ti];if(!T)return;
+if(T.ev===name&&(!T.chk||T.chk(data||{}))){next()}}
+function begin(){resetFS();$("np").style.display="none";$("sd").style.display="none";closeFm();ti=0;score=0;started=true;render();setProg();startTask()}
+function finish(){started=false;applyHints();$("hint").textContent="You are a Story Keeper!";setProg();say("");tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);
+overlay("You are a Story Keeper!","You wrote a sentence, saved it, found it, added to it, renamed it, and moved it. Great job!","Play again",begin)}
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak(started&&TASKS[ti]?TASKS[ti].t:$("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+resetFS();render();
+overlay("Welcome to the Story Shelf!","You will write a sentence in Notepad, save it in a folder, and find it again. Press Start!","Start",begin);
+</script>
+</body>
+</html>
