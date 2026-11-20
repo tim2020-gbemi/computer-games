@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Painter</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:14px 14px 28px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(26px,4.6vw,44px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:700;max-width:640px}
+#side{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#stars{font-size:34px;letter-spacing:3px}
+#stage{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.panel{background:var(--panel);color:var(--fg);border:4px solid var(--fg);border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.panel h3{margin:0;font-size:clamp(16px,2.6vw,24px);font-weight:800}
+.pg{display:grid;gap:5px}
+.px{width:clamp(18px,3.8vw,34px);height:clamp(18px,3.8vw,34px);border:3px solid #1F2A44;border-radius:6px;background:#fff}
+.px.on{background:#E63946}
+.cell{width:clamp(44px,9.4vw,76px);height:clamp(44px,9.4vw,76px);border:4px solid #1F2A44;border-radius:12px;background:#fff;color:#9AA3C0;font:inherit;font-size:clamp(20px,4.4vw,36px);font-weight:800;padding:0;box-shadow:none;cursor:pointer;touch-action:manipulation}
+.cell.on{background:var(--c,#FF8A3D);color:#1F2A44}
+.cell.hint{animation:pulse .7s infinite alternate;outline:4px solid #2BB5A0}
+.codebox{font-size:clamp(18px,3.4vw,30px);font-weight:800;letter-spacing:6px;line-height:1.2;text-align:center;font-variant-numeric:tabular-nums}
+.codebox span{display:block}
+.codebox.big{font-size:clamp(24px,4.6vw,40px)}
+.lights{display:flex;gap:8px}
+.lt{width:clamp(34px,7.6vw,62px);height:clamp(34px,7.6vw,62px);border-radius:50%;border:4px solid #5A6385;background:#2B3350;color:#9AA3C0;font:inherit;font-size:clamp(16px,3.4vw,28px);font-weight:800;padding:0;box-shadow:none;cursor:pointer;touch-action:manipulation}
+.lt.on{background:#FFD23F;border-color:#1F2A44;color:#1F2A44}
+.lt.hint{animation:pulse .7s infinite alternate;outline:4px solid #2BB5A0}
+.lrow{display:flex;align-items:center;gap:12px}
+.lrow .L{font-size:clamp(40px,8vw,72px);font-weight:800;width:clamp(36px,7vw,60px);text-align:center}
+.lrow.ok .lights{filter:drop-shadow(0 0 10px #7FD6B8)}
+.pal{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sw{width:clamp(30px,6vw,44px);height:clamp(30px,6vw,44px);border-radius:50%;border:4px solid #1F2A44;padding:0;box-shadow:none;cursor:pointer}
+.sw.on{outline:5px solid #FF8A3D;outline-offset:2px}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.1)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.win .cell.on,.win .lt.on{animation:pop .5s}
+#msg{min-height:42px;font-size:clamp(18px,3.4vw,30px);font-weight:800;text-align:center}
+#acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;font-size:22px;font-weight:800;padding:8px 22px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:19px;padding:5px 14px;background:var(--ye)}
+#next,#again{font-size:28px;padding:12px 32px}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+#done{display:none;text-align:center;flex-direction:column;align-items:center;gap:14px;padding:24px 8px}
+#done h2{margin:0;font-size:clamp(32px,6vw,54px);font-weight:800}
+#done p{margin:0;font-size:clamp(20px,3.6vw,30px);font-weight:500}
+.note{margin:0;text-align:center;font-size:18px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.cell.hint,.lt.hint,.win .cell.on,.win .lt.on{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="90" height="68" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Pixel Painter</h1><p id="hint">Get ready!</p></div>
+<div id="side"><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><div id="stars" aria-label="Progress"></div></div>
+</header>
+<section id="stage"></section>
+<div id="msg" role="status" aria-live="polite"></div>
+<div id="acts"><button id="hintBtn" class="small">💡 Hint</button><button id="clear" class="small">Clear</button><button id="fin" class="small" hidden>I am done!</button><button id="next" hidden>Next round</button></div>
+<section id="done">
+<h2>You are a Code Cracker!</h2>
+<p>You made pictures and words from 0s and 1s, like a real computer. Show your grown-up!</p>
+<button id="again">Play again</button>
+</section>
+<p class="note">1 means ON and colored. 0 means OFF and blank. Click a square to switch it.</p>
+</main>
+<script>
+var PAT={
+heart:{n:"a heart",e:"❤️",r:["01010","11111","11111","01110","00100"]},
+smiley:{n:"a smiley face",e:"😊",r:["01010","01010","00000","10001","01110"]},
+house:{n:"a house",e:"🏠",r:["00100","01110","11111","11111","11011"]},
+star:{n:"a star",e:"⭐",r:["00100","00100","11111","01110","01010"]},
+tree:{n:"a tree",e:"🌳",r:["00100","01110","11111","00100","00100"]}
+};
+var ROUNDS=[
+{type:"copy",hint:"Round 1: Copy the picture. Click the squares to make them 1.",items:["heart","house"]},
+{type:"decode",hint:"Round 2: Read the code. Click a square for every 1.",items:["star","tree","smiley"]},
+{type:"hi",hint:"Round 3: Make the computer say HI. Click the lights to match the code.",rows:[["H","01001000"],["i","01101001"]]},
+{type:"free",hint:"Round 4: Paint your own picture. Watch the code change!"}
+];
+var COLS=["#FF8A3D","#E63946","#2BB5A0","#3A86FF","#FFD23F","#1F2A44"];
+var r=0,ii=0,grid=[],lights=[],locked=true,color=COLS[0],cur=null,ac=null,voiceOn=true;
+var $=function(id){return document.getElementById(id)};
+function mk(tag,cls,txt){var d=document.createElement(tag);if(cls)d.className=cls;if(txt!==undefined)d.textContent=txt;return d}
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function stars(){var s="";for(var i=0;i<ROUNDS.length;i++){s+=i<r?"⭐":"☆"}$("stars").textContent=s}
+function clearHints(){[].slice.call(document.querySelectorAll(".hint")).forEach(function(e){e.classList.remove("hint")})}
+/* grid helpers */
+function blank(){return[0,1,2,3,4].map(function(){return[0,0,0,0,0]})}
+function targetGrid(p){return p.r.map(function(s){return s.split("").map(Number)})}
+function miniPic(p,col){
+var g=mk("div","pg");g.style.gridTemplateColumns="repeat(5,auto)";
+p.r.forEach(function(row){row.split("").forEach(function(ch){var d=mk("div","px"+(ch==="1"?" on":""));g.appendChild(d)})});return g}
+function codeBox(rows,big){var b=mk("div","codebox"+(big?" big":""));rows.forEach(function(x){b.appendChild(mk("span","",x.split("").join(" ")))});return b}
+function buildGrid(){
+var g=mk("div","pg");g.id="grid";g.style.gridTemplateColumns="repeat(5,auto)";
+for(var y=0;y<5;y++){for(var x=0;x<5;x++){(function(y,x){
+var b=mk("button","cell","0");b.dataset.y=y;b.dataset.x=x;b.setAttribute("aria-label","Square "+(y+1)+","+(x+1));
+b.addEventListener("click",function(){if(locked)return;clearHints();grid[y][x]=grid[y][x]?0:1;paintCell(b,y,x);liveCode();tone(grid[y][x]?620:420,0.07);checkGrid()});
+g.appendChild(b)}(y,x))}}
+return g}
+function paintCell(b,y,x){var on=grid[y][x]===1;b.classList.toggle("on",on);b.textContent=on?"1":"0";if(on)b.style.setProperty("--c",color)}
+function cellAt(y,x){return $("grid").children[y*5+x]}
+function liveCode(){var c=$("live");if(!c)return;c.innerHTML="";grid.forEach(function(row){c.appendChild(mk("span","",row.join(" ")))})}
+function mismatch(){
+if(!cur)return null;
+var t=cur.t;for(var y=0;y<5;y++)for(var x=0;x<5;x++){if(grid[y][x]!==t[y][x])return[y,x]}return null}
+function checkGrid(){
+if(r===3||!cur||locked)return;
+if(!mismatch()){locked=true;var p=PAT[cur.k];win();var m="Yes! It is "+p.n+"! "+p.e;say(m);speak("Yes! It is "+p.n+"!");$("stage").classList.add("win");
+setTimeout(function(){$("stage").classList.remove("win");ii++;afterItem()},2200)}}
+function afterItem(){
+var R=ROUNDS[r];
+if(ii>=R.items.length){roundDone()}else{showItem()}}
+/* rounds */
+function startRound(){
+var R=ROUNDS[r];ii=0;stars();$("hint").textContent=R.hint;$("next").hidden=true;$("done").style.display="none";$("stage").style.display="flex";$("acts").style.display="flex";
+$("fin").hidden=R.type!=="free";$("hintBtn").hidden=R.type==="free";
+say("");speak(R.hint);
+setTimeout(function(){if(R.type==="hi")showHi();else if(R.type==="free")showFree();else showItem()},R.hint.length*55+400)}
+function showItem(){
+var R=ROUNDS[r],k=R.items[ii],p=PAT[k];cur={k:k,t:targetGrid(p)};
+var st=$("stage");st.innerHTML="";grid=blank();locked=false;
+var left=mk("div","panel");
+if(R.type==="copy"){left.appendChild(mk("h3","","Copy this picture"));left.appendChild(miniPic(p));left.appendChild(codeBox(p.r,false))}
+else{left.appendChild(mk("h3","","Read this code"));left.appendChild(codeBox(p.r,true));left.appendChild(mk("h3","","1 = color it!"))}
+var right=mk("div","panel");right.appendChild(mk("h3","","Your picture"));right.appendChild(buildGrid());
+var live=mk("div","codebox");live.id="live";right.appendChild(mk("h3","","Your code"));right.appendChild(live);
+st.appendChild(left);st.appendChild(right);liveCode();say("");
+speak(R.type==="copy"?"Copy the picture. Click the squares.":"Read the code. Click a square for every 1.")}
+function showHi(){
+var R=ROUNDS[r],st=$("stage");st.innerHTML="";lights=R.rows.map(function(){return[0,0,0,0,0,0,0,0]});locked=false;cur=null;
+var p=mk("div","panel");p.id="hip";p.appendChild(mk("h3","","Make the computer say HI"));
+R.rows.forEach(function(rw,i){
+var row=mk("div","lrow");row.id="lr"+i;row.appendChild(mk("div","L",rw[0]));
+var col=mk("div","");col.style.cssText="display:flex;flex-direction:column;gap:6px;align-items:center";
+col.appendChild(codeBox([rw[1]],true));
+var ls=mk("div","lights");
+for(var b=0;b<8;b++){(function(i,b){var l=mk("button","lt","0");l.dataset.i=i;l.dataset.b=b;l.setAttribute("aria-label","Light "+(b+1));
+l.addEventListener("click",function(){if(locked)return;clearHints();lights[i][b]=lights[i][b]?0:1;l.classList.toggle("on",lights[i][b]===1);l.textContent=lights[i][b]?"1":"0";tone(lights[i][b]?620:420,0.07);checkHi()});ls.appendChild(l)}(i,b))}
+col.appendChild(ls);row.appendChild(col);p.appendChild(row)});
+st.appendChild(p);say("");speak("Make the code. Click the lights so they match.")}
+function checkHi(){
+var R=ROUNDS[r],all=true;
+R.rows.forEach(function(rw,i){var ok=lights[i].join("")===rw[1];$("lr"+i).classList.toggle("ok",ok);if(!ok)all=false});
+if(all&&!locked){locked=true;win();say("Hi! You made the computer say HI! 👋");speak("Hi! You made the computer say Hi!");setTimeout(roundDone,2400)}}
+function showFree(){
+var st=$("stage");st.innerHTML="";grid=blank();locked=false;cur=null;
+var left=mk("div","panel");left.appendChild(mk("h3","","Pick a color"));
+var pal=mk("div","pal");COLS.forEach(function(c){var s=mk("button","sw"+(c===color?" on":""));s.style.background=c;s.setAttribute("aria-label","Color");s.addEventListener("click",function(){color=c;[].forEach.call(pal.children,function(x){x.classList.remove("on")});s.classList.add("on")});pal.appendChild(s)});
+left.appendChild(pal);
+var right=mk("div","panel");right.appendChild(mk("h3","","Your picture"));right.appendChild(buildGrid());
+var live=mk("div","codebox");live.id="live";right.appendChild(mk("h3","","Your code"));right.appendChild(live);
+st.appendChild(left);st.appendChild(right);liveCode();say("Make any picture you like!");speak("Make any picture you like! Watch the code change.")}
+function roundDone(){
+locked=true;cur=null;
+if(r<ROUNDS.length-1){say("Round complete! Great job!");speak("Round complete! Great job!");$("next").hidden=false}
+else{finish()}}
+function finish(){
+r=ROUNDS.length;stars();$("stage").style.display="none";$("acts").style.display="none";say("");$("hint").textContent="";$("done").style.display="flex";
+tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);speak("You are a Code Cracker!")}
+$("next").addEventListener("click",function(){r++;startRound()});
+$("again").addEventListener("click",function(){r=0;startRound()});
+$("clear").addEventListener("click",function(){
+if(locked&&r!==3)return;clearHints();
+if(r===2){ROUNDS[2].rows.forEach(function(rw,i){lights[i]=[0,0,0,0,0,0,0,0]});[].forEach.call(document.querySelectorAll(".lt"),function(l){l.classList.remove("on");l.textContent="0"});checkHi();return}
+if(!$("grid"))return;grid=blank();[].forEach.call($("grid").children,function(b,k){paintCell(b,Math.floor(k/5),k%5)});liveCode()});
+$("hintBtn").addEventListener("click",function(){
+if(locked)return;clearHints();
+if(r===2){var R=ROUNDS[2];for(var i=0;i<R.rows.length;i++){for(var b=0;b<8;b++){if(String(lights[i][b])!==R.rows[i][1][b]){var l=document.querySelector('.lt[data-i="'+i+'"][data-b="'+b+'"]');if(l)l.classList.add("hint");say("Look at the glowing light!");return}}}return}
+var m=mismatch();if(m){cellAt(m[0],m[1]).classList.add("hint");say("Look at the glowing square!");speak("Look at the glowing square.")}});
+$("fin").addEventListener("click",function(){
+var n=0;grid.forEach(function(row){row.forEach(function(v){n+=v})});
+if(n<3){say("Color at least 3 squares first!");tone(220,0.2);return}
+win();finish()});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak($("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+startRound();
+</script>
+</body>
+</html>
