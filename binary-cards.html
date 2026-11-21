@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Binary Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--fg:#1F2A44;--panel:#FFFFFF;--line:#E4DED2;--or:#FF8A3D;--te:#2BB5A0;--ye:#FFD23F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}}
+:root[data-theme="dark"]{--bg:#1F2A44;--fg:#FFF8EC;--panel:#2C3A5C;--line:#40507A}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Baloo 2','Trebuchet MS',system-ui,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:14px 14px 28px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(26px,4.6vw,44px);font-weight:800;line-height:1.1}
+#hint{margin:0;font-size:clamp(16px,2.6vw,26px);font-weight:700;max-width:640px}
+#side{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#stars{font-size:34px;letter-spacing:3px}
+#stage{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-direction:column;align-items:center}
+.panel{background:var(--panel);color:var(--fg);border:4px solid var(--fg);border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:820px}
+.panel h3{margin:0;font-size:clamp(16px,2.6vw,24px);font-weight:800}
+
+.sws{display:flex;gap:12px;justify-content:center;width:100%}
+.swc{flex:1;max-width:170px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.swc .v{font-size:clamp(22px,5vw,40px);font-weight:800}
+.sw{width:100%;padding:clamp(14px,3.4vw,30px) 0;border-radius:24px;border:4px solid #1F2A44;font:inherit;font-size:clamp(44px,10vw,90px);font-weight:800;line-height:1;background:#FFF8EC;color:#1F2A44;opacity:.7;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3);touch-action:manipulation}
+.sw.on{background:#FFD23F;opacity:1}
+.sw.hint,.ch.hint{animation:pulse .7s infinite alternate;outline:4px solid #2BB5A0}
+.tot{font-size:clamp(26px,5.6vw,52px);font-weight:800;text-align:center}
+.tgt{font-size:clamp(34px,7vw,64px);font-weight:800}
+.count{font-size:clamp(16px,2.6vw,22px);font-weight:700}
+.chs{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.ch{font-size:clamp(34px,7vw,60px);padding:10px 36px;background:#2BB5A0;border-radius:28px}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+.win .tot,.win .tgt{animation:pop .5s}
+#msg{min-height:42px;font-size:clamp(18px,3.4vw,30px);font-weight:800;text-align:center}
+#acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;font-size:22px;font-weight:800;padding:8px 22px;border:0;border-radius:999px;background:var(--or);color:#1F2A44;cursor:pointer;box-shadow:0 6px 0 rgba(31,42,68,.3)}
+button.small{font-size:19px;padding:5px 14px;background:var(--ye)}
+#next,#again{font-size:28px;padding:12px 32px}
+button:focus-visible{outline:4px solid var(--fg);outline-offset:3px}
+#done{display:none;text-align:center;flex-direction:column;align-items:center;gap:14px;padding:24px 8px}
+#done h2{margin:0;font-size:clamp(32px,6vw,54px);font-weight:800}
+#done p{margin:0;font-size:clamp(20px,3.6vw,30px);font-weight:500}
+.note{margin:0;text-align:center;font-size:18px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.sw.hint,.ch.hint,.shake,.win .tot,.win .tgt{animation:none}}
+</style>
+</head>
+<body>
+<main id="app">
+<header>
+<svg width="90" height="68" viewBox="0 0 200 150" role="img" aria-label="A friendly turtle"><rect x="40" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><rect x="120" y="105" width="28" height="30" rx="12" fill="#1E8F7E"/><ellipse cx="95" cy="80" rx="70" ry="50" fill="#2BB5A0"/><circle cx="70" cy="70" r="14" fill="#1E8F7E"/><circle cx="105" cy="55" r="14" fill="#1E8F7E"/><circle cx="120" cy="90" r="14" fill="#1E8F7E"/><circle cx="168" cy="72" r="24" fill="#7FD6B8"/><circle cx="176" cy="66" r="4" fill="#1F2A44"/><path d="M162 82 Q172 90 182 82" stroke="#1F2A44" stroke-width="3" fill="none"/></svg>
+<div><h1>Binary Cards</h1><p id="hint">Get ready!</p></div>
+<div id="side"><button id="hear" class="small">🔊 Hear it</button><button id="voice" class="small" aria-pressed="true">Voice on</button><div id="stars" aria-label="Progress"></div></div>
+</header>
+<section id="stage"></section>
+<div id="msg" role="status" aria-live="polite"></div>
+<div id="acts"><button id="hintBtn" class="small">💡 Hint</button><button id="next" hidden>Next round</button></div>
+<section id="done">
+<h2>You are a Binary Builder!</h2>
+<p>You read codes and built numbers with switches. Show your grown-up!</p>
+<button id="again">Play again</button>
+</section>
+<p class="note">Each switch is worth double: 1, 2, 4, 8. Switch on? Count it. Switch off? Count nothing.</p>
+</main>
+<script>
+var ROUNDS=[
+{type:"read",n:4,bits:3,hint:"Round 1: Read the code. Add up the switches that are on."},
+{type:"make",n:4,bits:3,hint:"Round 2: Make the number. Tap switches to turn them on."},
+{type:"make",n:3,bits:4,hint:"Round 3: Go bigger. Now there are four switches!"}
+];
+var r=0,ii=0,qs=[],arr=[],locked=true,voiceOn=true,ac=null,tm=null,tg=0;
+var $=function(id){return document.getElementById(id)};
+function mk(tag,cls,txt){var d=document.createElement(tag);if(cls)d.className=cls;if(txt!==undefined)d.textContent=txt;return d}
+function tone(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=0.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(d||0.15));}catch(e){}}
+function win(){tone(660,0.12);setTimeout(function(){tone(880,0.18)},120)}
+function speak(t){if(!voiceOn)return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}
+function say(t){$("msg").textContent=t}
+function stars(){var s="";for(var i=0;i<ROUNDS.length;i++){s+=i<r?"⭐":"☆"}$("stars").textContent=s}
+function clearHints(){[].slice.call(document.querySelectorAll(".hint")).forEach(function(e){e.classList.remove("hint")})}
+function later(f,ms){clearTimeout(tm);tm=setTimeout(f,ms)}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function vals(n){return n===4?[8,4,2,1]:[4,2,1]}
+function bitsOf(n,len){var s=[];for(var i=len-1;i>=0;i--)s.push((n>>i)&1);return s}
+function sum(a,len){var v=vals(len),t=0;for(var i=0;i<len;i++)t+=a[i]*v[i];return t}
+function expl(a,len){var v=vals(len),p=[];for(var i=0;i<len;i++)if(a[i])p.push(v[i]);return p.length?p.join(" + ")+" = "+sum(a,len):"Nothing is on. That is 0"}
+function startRound(){
+clearTimeout(tm);var R=ROUNDS[r];ii=0;stars();$("hint").textContent=R.hint;$("next").hidden=true;$("done").style.display="none";$("stage").style.display="flex";$("acts").style.display="flex";$("hintBtn").hidden=false;
+say("");locked=true;$("stage").innerHTML="";speak(R.hint);
+var pool=R.bits===4?[9,10,11,12,13,14,15]:[1,2,3,4,5,6,7];
+qs=shuffle(pool).slice(0,R.n);
+var my=r;later(function(){if(my!==r)return;showQ()},R.hint.length*55+400)}
+function swRow(a,len,click){
+var row=mk("div","sws"),v=vals(len);
+for(var i=0;i<len;i++){(function(i){var c=mk("div","swc");c.appendChild(mk("div","v",v[i]));var b=mk("button","sw"+(a[i]?" on":""),a[i]);b.dataset.i=i;if(click)b.addEventListener("click",function(){tap(i)});else{b.style.cursor="default";b.tabIndex=-1}c.appendChild(b);row.appendChild(c)})(i)}
+return row}
+function showQ(){
+var R=ROUNDS[r],st=$("stage"),n=qs[ii];st.innerHTML="";locked=false;say("");clearHints();
+var p=mk("div","panel");p.appendChild(mk("div","count","Question "+(ii+1)+" of "+qs.length));
+if(R.type==="read"){
+arr=bitsOf(n,R.bits);p.appendChild(swRow(arr,R.bits,false));st.appendChild(p);
+var o=[n];while(o.length<3){var x=Math.floor(Math.random()*8);if(o.indexOf(x)<0)o.push(x)}
+var cs=mk("div","chs");shuffle(o).forEach(function(x){var b=mk("button","ch",x);b.dataset.n=x;b.addEventListener("click",function(){chose(x,b)});cs.appendChild(b)});st.appendChild(cs);speak("What number is this code?")}
+else{
+arr=[];for(var i=0;i<R.bits;i++)arr.push(0);tg=n;
+p.appendChild(mk("div","tgt","Make "+n));p.appendChild(swRow(arr,R.bits,true));var t=mk("div","tot","0");t.id="tot";p.appendChild(t);st.appendChild(p);speak("Make "+n)}}
+function chose(x,b){
+if(locked)return;clearHints();var R=ROUNDS[r],n=qs[ii];
+if(x===n){locked=true;win();var m="Yes! "+expl(arr,R.bits)+"!";say(m);speak(m);adv()}
+else{tone(220,0.2);b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");say("Not quite. Add the glowing numbers again.");speak("Not quite. Try again.")}}
+function tap(i){
+if(locked)return;clearHints();tone(520,0.06);var R=ROUNDS[r];arr[i]=arr[i]?0:1;
+var b=document.querySelector('.sw[data-i="'+i+'"]');b.className="sw"+(arr[i]?" on":"");b.textContent=arr[i];
+var s=sum(arr,R.bits);$("tot").textContent=arr.some(function(x){return x})?expl(arr,R.bits):"0";
+if(s===tg){locked=true;win();var m="Yes! "+expl(arr,R.bits)+"!";say(m);speak(m);adv()}}
+function adv(){$("stage").classList.add("win");later(function(){$("stage").classList.remove("win");ii++;if(ii>=qs.length)roundDone();else showQ()},2000)}
+function roundDone(){
+locked=true;if(r<ROUNDS.length-1){say("Round complete! Great job!");speak("Round complete! Great job!");$("next").hidden=false;$("hintBtn").hidden=true}
+else finish()}
+function finish(){
+r=ROUNDS.length;stars();$("stage").style.display="none";$("acts").style.display="none";say("");$("hint").textContent="";$("done").style.display="flex";
+tone(660,0.15);setTimeout(function(){tone(880,0.15)},150);setTimeout(function(){tone(1100,0.25)},300);speak("You are a Binary Builder!")}
+$("next").addEventListener("click",function(){r++;startRound()});
+$("again").addEventListener("click",function(){r=0;startRound()});
+$("hintBtn").addEventListener("click",function(){
+if(locked)return;clearHints();var R=ROUNDS[r];
+if(R.type==="read"){var b=document.querySelector('.ch[data-n="'+qs[ii]+'"]');if(b){b.classList.add("hint");say("Look at the glowing number!");speak("Look at the glowing number.")}return}
+var want=bitsOf(qs[ii],R.bits);for(var i=0;i<R.bits;i++){if(want[i]!==arr[i]){var s=document.querySelector('.sw[data-i="'+i+'"]');if(s)s.classList.add("hint");say("Tap the glowing switch!");speak("Tap the glowing switch.");return}}});
+$("hear").addEventListener("click",function(){var v=voiceOn;voiceOn=true;speak($("hint").textContent);voiceOn=v});
+$("voice").addEventListener("click",function(){voiceOn=!voiceOn;this.textContent=voiceOn?"Voice on":"Voice off";this.setAttribute("aria-pressed",voiceOn);if(!voiceOn){try{window.speechSynthesis.cancel()}catch(e){}}});
+startRound();
+</script>
+</body>
+</html>
